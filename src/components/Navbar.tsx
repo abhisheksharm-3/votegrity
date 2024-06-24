@@ -10,14 +10,14 @@ const Navbar = () => {
 
   return (
     <div className="container py-6 flex  item-center justify-between">
-      <Image src="/images/logo.png" alt="Logo" width={200} height={200} />
+      <Link href="/"><Image src="/images/logo.png" alt="Logo" width={200} height={200} /></Link>
       <div className="flex justify-center items-center gap-8">
         {navItems.map((item, index) => (
           <Link href={item.href} key={index} className="font-medium hover:-translate-y-2 ease-in-out duration-400">
             {item.label}
           </Link>
         ))}
-        <Button className="bg-[#94c358] rounded-md text-white font-bold tracking-wide" variant="shadow">Login</Button>
+        <Link href="/login"><Button className="bg-[#94c358] rounded-md text-white font-bold tracking-wide" variant="shadow">Login</Button></Link>
       </div>
     </div>
   );
