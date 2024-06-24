@@ -12,7 +12,7 @@ const Login = () => {
             Login to Your Account
           </h1>
           <div className="w-8/12 flex items-center justify-center">
-            <div className="bg-white/90 rounded-2xl w-max px-32 py-10 flex flex-col items-center justify-center gap-8">
+            <div className="bg-white/90 rounded-2xl w-max px-44 py-10 flex flex-col items-center justify-center gap-8">
               <h1 className="font-semibold font-playfair text-4xl">
                 Good to see you again!
               </h1>
