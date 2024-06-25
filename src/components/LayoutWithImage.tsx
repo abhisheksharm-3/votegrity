@@ -19,7 +19,7 @@ const LayoutWithImage = ({
         className
       )}
     >
-      <Navbar />
+      <Navbar isLandingPage={false} />
       {children}
     </div>
   );

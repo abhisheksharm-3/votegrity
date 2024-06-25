@@ -19,7 +19,7 @@ const Layout = ({
         className
       )}
     >
-      <Navbar />
+      <Navbar isLandingPage={true} />
       {children}
     </div>
   );
