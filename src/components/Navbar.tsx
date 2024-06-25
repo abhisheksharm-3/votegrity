@@ -51,9 +51,11 @@ const NavbarComponent = ({ isLandingPage }: {isLandingPage: boolean}) => {
       </NavbarContent>
       <NavbarContent justify="end">
         <NavbarItem>
-        <Button className="bg-[#94c358] rounded-md text-white font-bold tracking-wide" variant="shadow">
+        <Link href="/login">
+          <Button className="bg-[#94c358] rounded-md text-white font-bold tracking-wide" variant="shadow">
             Login
           </Button>
+        </Link>
         </NavbarItem>
       </NavbarContent>
       <NavbarMenu>
