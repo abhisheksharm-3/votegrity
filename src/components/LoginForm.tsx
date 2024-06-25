@@ -41,15 +41,15 @@ const LoginForm = () => {
     },
   });
   return     <Form {...form}>
-  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 flex flex-col w-max">
+  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 flex flex-col w-full container">
     <FormField
       control={form.control}
       name="email"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Your Email</FormLabel>
+          <FormLabel className="font-semibold text-base tracking-wide">Your Email</FormLabel>
           <FormControl>
-            <Input placeholder="example@example.com" type="email" {...field} startContent={<RiUser5Fill />} />
+            <Input className="rounded-xl border-zinc-500 border-[1px]" placeholder="example@example.com" type="email" {...field} startContent={<RiUser5Fill />} />
           </FormControl>
           <FormMessage />
         </FormItem>
@@ -60,15 +60,15 @@ const LoginForm = () => {
       name="password"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Username</FormLabel>
+          <FormLabel className="font-semibold text-base tracking-wide">Username</FormLabel>
           <FormControl>
-            <Input placeholder="Password" type="password" {...field} startContent={<RiGitRepositoryPrivateFill />}/>
+            <Input className="rounded-xl border-zinc-500 border-[1px]" placeholder="Password" type="password" {...field} startContent={<RiGitRepositoryPrivateFill />}/>
           </FormControl>
           <FormMessage />
         </FormItem>
       )}
     />
-    <Button type="submit" className="bg-[#94C358]">Submit</Button>
+    <Button type="submit" className="bg-[#94C358] font-semibold">Submit</Button>
   </form>
 </Form>;
 };
