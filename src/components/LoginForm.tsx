@@ -60,7 +60,7 @@ const LoginForm = () => {
       name="password"
       render={({ field }) => (
         <FormItem>
-          <FormLabel className="font-semibold text-base tracking-wide">Username</FormLabel>
+          <FormLabel className="font-semibold text-base tracking-wide">Password</FormLabel>
           <FormControl>
             <Input className="rounded-xl border-zinc-500 border-[1px]" placeholder="Password" type="password" {...field} startContent={<RiGitRepositoryPrivateFill />}/>
           </FormControl>

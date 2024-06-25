@@ -7,7 +7,7 @@ import Image from "next/image";
 export default function Home() {
   return (
     <Layout>
-      <div className="flex items-center justify-around z-[9999]">
+      <div className="flex flex-col gap-4 lg:gap-0 lg:flex-row items-center justify-around z-10">
         {" "}
         <div className="translate-y-6">
           <Image
@@ -15,14 +15,15 @@ export default function Home() {
             alt="hero image"
             width={600}
             height={500}
+            className="p-4 md:p-0"
           />
         </div>
-        <div className="flex flex-col justify-center items-start gap-8">
+        <div className="flex flex-col justify-center items-center lg:items-start gap-8">
           <span className="uppercase text-gray-400">
             Be a Part of Decision!
           </span>
-          <h1 className="font-playfair text-8xl font-bold">Vote Today.</h1>
-          <span>
+          <h1 className="font-playfair text-8xl font-bold text-center lg:text-left">Vote Today.</h1>
+          <span className="text-center lg:text-left">
             An online voting system that will replace <br /> the centralized
             voting system.
           </span>
@@ -37,7 +38,7 @@ export default function Home() {
               Read More
             </Button>
           </div>
-          <span className="flex gap-5 items-center">
+          <span className="flex gap-5 items-center mb-10">
             {" "}
             <FaEthereum className="text-[#72a269] text-3xl" />{" "}
             <span className="text-gray-400 text-sm">

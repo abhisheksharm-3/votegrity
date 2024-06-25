@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
-import Navbar from "./Navbar";
+import NavbarComponent from "./Navbar";
 
 
 const Layout = ({
@@ -19,7 +19,7 @@ const Layout = ({
         className
       )}
     >
-      <Navbar isLandingPage={true} />
+      <NavbarComponent isLandingPage={true} />
       {children}
     </div>
   );

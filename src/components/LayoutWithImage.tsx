@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
-import Navbar from "./Navbar";
+import NavbarComponent from "./Navbar";
 
 
 const LayoutWithImage = ({
@@ -19,7 +19,7 @@ const LayoutWithImage = ({
         className
       )}
     >
-      <Navbar isLandingPage={false} />
+      <NavbarComponent isLandingPage={false} />
       {children}
     </div>
   );

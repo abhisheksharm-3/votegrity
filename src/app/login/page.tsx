@@ -7,17 +7,17 @@ const Login = () => {
   return (
     <LayoutWithImage>
       <div className="w-screen flex flex-row container items-center  h-screen">
-        <div className="w-screen flex flex-col gap-8 justify-center">
-          <h1 className="text-white/70 font-medium text-5xl font-playfair">
+        <div className="w-screen flex flex-col gap-16 lg:gap-8 justify-center items-center -translate-y-10">
+          <h1 className="text-white/70 font-medium text-5xl font-playfair text-center">
             Login to Your Account
           </h1>
-          <div className="w-8/12 flex items-center justify-center">
+          <div className="lg:w-8/12 flex items-center justify-center">
             <div className="bg-white/90 rounded-2xl w-full py-10 flex flex-col items-center justify-center gap-8">
-              <h1 className="font-semibold font-playfair text-4xl">
+              <h1 className="font-semibold font-playfair text-4xl text-center">
                 Good to see you again!
               </h1>
               <LoginForm />
-              <div className="flex item-center justify-around w-full container"><Link
+              <div className="flex item-center justify-around w-full container text-center"><Link
                 href="/register"
                 className="text-[#004600] font-semibold text-base"
               >
