@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Votegrity",
-  description: "Blockchain Based dApp Voting WebAPp",
+  description: "Blockchain Based dApp Voting WebApp",
 };
 
 export default function RootLayout({
