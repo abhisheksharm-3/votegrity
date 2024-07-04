@@ -1,6 +1,6 @@
 import Footer from "@/components/Footer";
 import Layout from "@/components/Layout";
-import { Button } from "@nextui-org/react";
+import { Button, Link } from "@nextui-org/react";
 import { FaEthereum } from "react-icons/fa";
 import Image from "next/image";
 
@@ -28,7 +28,7 @@ export default function Home() {
             voting system.
           </span>
           <div className="flex gap-5">
-            <Button className="bg-maindark text-white uppercase font-normal tracking-widest">
+            <Button as={Link} className="bg-maindark text-white uppercase font-normal tracking-widest" href="/register">
               Register
             </Button>{" "}
             <Button

@@ -48,7 +48,7 @@ const SignUpForm = () => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 flex flex-col w-max">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 lg:space-y-4 flex flex-col w-max">
         <FormField
           control={form.control}
           name="name"
