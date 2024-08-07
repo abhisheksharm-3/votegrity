@@ -1,50 +1,103 @@
 "use client";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import React, { useEffect, useState } from 'react';
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
-import { Button, Input } from "@nextui-org/react";
-import { RiCalendar2Fill, RiGitRepositoryPrivateFill, RiMailFill, RiUser5Fill, RiEye2Fill, RiEyeCloseFill } from "@remixicon/react";
+import { Button, Input, Checkbox } from "@nextui-org/react";
+import { RiCalendar2Fill, RiGitRepositoryPrivateFill, RiMailFill, RiUser5Fill, RiEye2Fill, RiEyeCloseFill, RiWallet3Fill } from "@remixicon/react";
 import PasswordStrengthBar from 'react-password-strength-bar';
+import { ethers } from 'ethers';
+import Link from 'next/link';
 
 const formSchema = z.object({
-  name: z.string().min(1, { message: "This field has to be filled." }),
-  dob: z.string().min(1, { message: "This field has to be filled." }),
-  email: z.string().min(1, { message: "This field has to be filled." }).email("This is not a valid email."),
+  name: z.string().min(1, { message: "Name is required" }),
+  email: z.string().min(1, { message: "Email is required" }).email("This is not a valid email."),
+  walletAddress: z.string().min(1, { message: "Wallet address is required" }),
   password: z.string().min(8, { message: "Password must be at least 8 characters." }),
+  confirmPassword: z.string().min(1, "Please confirm your password"),
+  agreeTerms: z.boolean().refine(val => val === true, "You must agree to the terms and conditions")
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
 });
 
-function onSubmit(values: z.infer<typeof formSchema>) {
-  // Do something with the form values.
-  // ✅ This will be type-safe and validated.
-  console.log(values);
-}
-
 const SignUpForm = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [password, setPassword] = useState("");
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      dob: "",
       email: "",
+      walletAddress: "",
       password: "",
+      confirmPassword: "",
+      agreeTerms: false,
     },
   });
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [password, setPassword] = useState("");
+  useEffect(() => {
+    connectWallet();
+  }, []);
+
+  const connectWallet = async () => {
+    if (typeof window.ethereum !== 'undefined') {
+      try {
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const address = await signer.getAddress();
+        form.setValue('walletAddress', address);
+      } catch (err) {
+        console.error("Failed to connect wallet:", err);
+        setError("Failed to connect wallet. Please try again.");
+      }
+    } else {
+      setError("MetaMask is not installed. Please install it to continue.");
+    }
+  };
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const password = e.target.value;
-    form.setValue("password", password);
-    setPassword(password);
+    const newPassword = e.target.value;
+    form.setValue("password", newPassword);
+    setPassword(newPassword);
   };
 
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/user/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error('Registration failed');
+      }
+
+      const result = await response.json();
+      console.log("Registration successful:", result);
+      // Handle successful registration (e.g., show success message, redirect)
+    } catch (err) {
+      console.error("Error during registration:", err);
+      setError(err instanceof Error ? err.message : "An error occurred during registration");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <Form {...form}>
@@ -64,12 +117,12 @@ const SignUpForm = () => {
         />
         <FormField
           control={form.control}
-          name="dob"
+          name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-white">Date of Birth</FormLabel>
+              <FormLabel className="text-white">Your Email</FormLabel>
               <FormControl>
-                <Input placeholder="DD-MM-YYYY" type="date" {...field} startContent={<RiCalendar2Fill />} />
+                <Input placeholder="example@example.com" type="email" {...field} startContent={<RiMailFill />} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -77,12 +130,12 @@ const SignUpForm = () => {
         />
         <FormField
           control={form.control}
-          name="email"
+          name="walletAddress"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-white">Your Email</FormLabel>
+              <FormLabel className="text-white">Wallet Address</FormLabel>
               <FormControl>
-                <Input placeholder="example@example.com" type="email" {...field} startContent={<RiMailFill />} />
+                <Input placeholder="0x..." {...field} startContent={<RiWallet3Fill />} readOnly />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -117,8 +170,45 @@ const SignUpForm = () => {
             </FormItem>
           )}
         />
-        <Button type="submit" className="border-2 border-[#94C358] w-max text-white uppercase tracking-widest" variant="bordered">
-          Submit
+        <FormField
+          control={form.control}
+          name="confirmPassword"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-white">Confirm Password</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Confirm Password"
+                  type="password"
+                  {...field}
+                  startContent={<RiGitRepositoryPrivateFill />}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="agreeTerms"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <Checkbox
+                  // {...field}
+                  isSelected={field.value}
+                  onValueChange={field.onChange}
+                >
+                  I agree to the <Link href="/terms" className="text-black font-semibold">Terms and conditions</Link>
+                </Checkbox>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        {error && <p className="text-red-500">{error}</p>}
+        <Button type="submit" disabled={isLoading} className="border-2 border-[#94C358] w-max text-white uppercase tracking-widest" variant="bordered">
+          {isLoading ? 'Registering...' : 'Register'}
         </Button>
       </form>
     </Form>
