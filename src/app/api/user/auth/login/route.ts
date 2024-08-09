@@ -27,7 +27,8 @@ export async function POST(request: NextRequest) {
         secure: true,
       });
 
-      return NextResponse.redirect(`${request.nextUrl.origin}/user/home`);
+
+      return NextResponse.json({ success: true, message: 'Registration successful' }, { status: 200 });
     }
 
     return NextResponse.json({ error: 'Unexpected error during login' }, { status: 500 });

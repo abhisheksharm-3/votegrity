@@ -7,6 +7,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Button, Input } from "@nextui-org/react";
 import { RiGitRepositoryPrivateFill, RiUser5Fill, RiWallet3Fill } from "@remixicon/react";
 import { ethers } from 'ethers';
+import { redirect } from 'next/navigation';
+import { loginWithEmailAndWallet } from '@/lib/server/appwrite';
+import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
   email: z.string().min(1, { message: "This field has to be filled." }).email("This is not a valid email."),
@@ -17,6 +20,7 @@ const formSchema = z.object({
 const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -51,7 +55,6 @@ const LoginForm = () => {
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     setError(null);
-
     try {
       const response = await fetch('/api/user/auth/login', {
         method: 'POST',
@@ -65,17 +68,14 @@ const LoginForm = () => {
         throw new Error('Login failed');
       }
 
-      const result = await response.json();
-      console.log("Login successful:", result);
-      // Handle successful login (e.g., redirect to dashboard)
+      router.push('/user/home');
     } catch (err) {
-      console.error("Error during login:", err);
-      setError(err instanceof Error ? err.message : "An error occurred during login");
+      console.error("Error during registration:", err);
+      setError(err instanceof Error ? err.message : "An error occurred during registration");
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">

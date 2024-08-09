@@ -9,6 +9,7 @@ import { RiCalendar2Fill, RiGitRepositoryPrivateFill, RiMailFill, RiUser5Fill, R
 import PasswordStrengthBar from 'react-password-strength-bar';
 import { ethers } from 'ethers';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
@@ -27,6 +28,7 @@ const SignUpForm = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("");
+  const router = useRouter()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -88,9 +90,7 @@ const SignUpForm = () => {
         throw new Error('Registration failed');
       }
 
-      const result = await response.json();
-      console.log("Registration successful:", result);
-      // Handle successful registration (e.g., show success message, redirect)
+      router.push('/user/home');
     } catch (err) {
       console.error("Error during registration:", err);
       setError(err instanceof Error ? err.message : "An error occurred during registration");

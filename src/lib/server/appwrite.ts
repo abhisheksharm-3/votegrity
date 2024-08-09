@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 export async function createSessionClient() {
   const client = new Client()
     .setEndpoint(process.env.APPWRITE_ENDPOINT!)
-    .setProject(process.env.APPWRITE_PROJECT!!);
+    .setProject(process.env.APPWRITE_PROJECT!);
 
   const session = cookies().get("votegrity-session");
   if (!session || !session.value) {
@@ -27,7 +27,7 @@ export async function createAdminClient() {
   const client = new Client()
     .setEndpoint(process.env.APPWRITE_ENDPOINT!)
     .setProject(process.env.APPWRITE_PROJECT!)
-    .setKey(process.env.NEXT_APPWRITE_KEY!);
+    .setKey(process.env.APPWRITE_KEY!);
 
   return {
     get account() {
@@ -55,12 +55,19 @@ export async function signUpWithEmail(formData: FormData) {
     .setProject(process.env.APPWRITE_PROJECT!)
     .setKey(process.env.APPWRITE_KEY!);
 
-  const account = new Account(client);
   const databases = new Databases(client);
+
+  const { account } = await createAdminClient();
 
   try {
     const user = await account.create(ID.unique(), email, password, name);
     const session = await account.createEmailPasswordSession(email, password);
+    cookies().set("votegrity-session", session.secret, {
+      path: "/",
+      httpOnly: true,
+      sameSite: "strict",
+      secure: true,
+    });
 
     await databases.createDocument(
       process.env.APPWRITE_DATABASE_ID!,
@@ -99,7 +106,7 @@ export async function getWalletAddress(userId: string) {
   try {
     const document = await databases.getDocument(
       process.env.APPWRITE_DATABASE_ID!,
-      process.env.APPWRITE_USER_ID!,
+      process.env.APPWRITE_COLLECTION_ID!,
       userId
     );
     return { success: true, walletAddress: document.walletAddress };
@@ -109,10 +116,15 @@ export async function getWalletAddress(userId: string) {
   }
 }
 export async function loginWithEmailAndWallet(email: string, password: string, walletAddress: string) {
+  const { account } = await createAdminClient(); 
   try {
-    const { account } = await createAdminClient();
     const session = await account.createEmailPasswordSession(email, password);
-    const user = await account.get();
+    cookies().set("votegrity-session", session.secret, {
+      path: "/",
+      httpOnly: true,
+      sameSite: "strict",
+      secure: true,
+    });
 
     const client = new Client()
       .setEndpoint(process.env.APPWRITE_ENDPOINT!)
@@ -124,7 +136,7 @@ export async function loginWithEmailAndWallet(email: string, password: string, w
     const document = await databases.getDocument(
       process.env.APPWRITE_DATABASE_ID!,
       process.env.APPWRITE_COLLECTION_ID!,
-      user.$id
+      session.userId
     );
 
     if (document.walletAddress !== walletAddress) {

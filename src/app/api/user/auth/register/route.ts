@@ -36,7 +36,8 @@ export async function POST(request: NextRequest) {
     await tx.wait();
     console.log(tx)
 
-    return NextResponse.redirect(`${request.nextUrl.origin}/user/home`);
+    // Instead of redirecting, send a success response
+    return NextResponse.json({ success: true, message: 'Registration successful' }, { status: 200 });
   } catch (error) {
     console.error('Registration error:', error);
     return NextResponse.json({ error: 'Registration failed' }, { status: 500 });
