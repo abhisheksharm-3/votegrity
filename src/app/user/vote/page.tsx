@@ -308,7 +308,7 @@ export default function VotePage() {
                     />
                     <div className="text-white text-center">
                       <p className="mb-2">WE RECEIVED YOUR VOTE.</p>
-                      <h2 className="text-3xl font-bold">Thank you!</h2>
+                      <h2 className="text-7xl font-bold font-playfair">Thank you!</h2>
                     </div>
                   </motion.div>
                 )}
