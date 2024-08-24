@@ -71,8 +71,7 @@ const LoggedInNavbar: React.FC<LoggedInNavbarProps> = ({ isLandingPage }) => {
                             />
                         </DropdownTrigger>
                         <DropdownMenu aria-label="User Actions" variant="flat">
-                            <DropdownItem key="profile" href="/profile">My Profile</DropdownItem>
-                            <DropdownItem key="settings" href="/settings">Settings</DropdownItem>
+                            <DropdownItem key="settings" href="/user/settings">Settings</DropdownItem>
                             <DropdownItem key="logout" color="danger" href="/api/logout">
                                 Log Out
                             </DropdownItem>
