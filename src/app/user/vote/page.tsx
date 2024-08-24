@@ -215,9 +215,9 @@ export default function VotePage() {
                   {voteSubmitted ? "Vote Confirmation" : "Presidential Candidates"}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-8">
+              <CardContent className="p-0">
                 {!voteSubmitted ? (
-                  <>
+                  <div className="p-8">
                     <RadioGroup value={selectedCandidate} onValueChange={setSelectedCandidate}>
                       <Accordion type="single" collapsible>
                         {candidates.map((candidate, index) => (
@@ -292,25 +292,33 @@ export default function VotePage() {
                         "Submit Vote"
                       )}
                     </Button>
-                  </>
+                  </div>
                 ) : (
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
-                    className="flex flex-col items-center"
-                  >
-                    <div className="text-white mb-4">Leading Candidate: Folayowon Oladapo</div>
-                    <img 
-                      src="/images/thanks.png" 
-                      alt="Vote Received" 
-                      className="w-full max-w-md rounded-lg mb-6"
-                    />
-                    <div className="text-white text-center">
-                      <p className="mb-2">WE RECEIVED YOUR VOTE.</p>
-                      <h2 className="text-7xl font-bold font-playfair">Thank you!</h2>
-                    </div>
-                  </motion.div>
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, type: "spring", stiffness: 200 }}
+                  className="relative h-[600px] overflow-hidden"
+                >
+                  <img 
+                    src="/images/thanks.svg" 
+                    alt="Vote Received" 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center p-8">
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3, duration: 0.5 }}
+                    >
+                      <p className="text-2xl mb-2">Leading Candidate: Folayowon Oladapo</p>
+                      <p className="mb-4 text-xl">WE RECEIVED YOUR VOTE</p>
+                      <h2 className="text-7xl font-bold font-playfair mb-8">Thank you!</h2>
+                      <p className="text-lg opacity-80">Your voice matters in shaping our future.</p>
+                    </motion.div>
+                  </div>
+                </motion.div>
                 )}
               </CardContent>
             </Card>
