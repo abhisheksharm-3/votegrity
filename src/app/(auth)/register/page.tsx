@@ -14,7 +14,7 @@ const Register = () => {
           </span>
           <SignUpForm />
         </div>
-        <div className="hidden lg:block lg:w-2/3 bg-[url('/images/register.svg')] bg-right bg-no-repeat bg-cover object-cover lg:z-[9999]"></div>
+        <div className="hidden lg:block lg:w-2/3 bg-[url('/images/register.svg')] bg-right bg-no-repeat bg-cover lg:z-[9999]"></div>
       </div>
     </LayoutWithImage>
   );
