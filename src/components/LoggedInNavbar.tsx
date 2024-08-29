@@ -20,8 +20,9 @@ const LoggedInNavbar: React.FC<LoggedInNavbarProps> = ({ isLandingPage }) => {
     const [user, setUser] = useState<User | null>(null);
     const navItems = [
         { label: "Home", href: "/user/home" },
-        { label: "How to Vote", href: "/how-to-vote" },
-        { label: "About Us", href: "/about-us" },
+        { label: "Create a Proposal", href: "/user/create-proposal" },
+        { label: "Vote", href: "/user/vote" },
+        { label: "My Elections", href: "/user/manage-elections" },
     ];
 
     useEffect(() => {

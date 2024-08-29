@@ -82,7 +82,7 @@ export default function WinnerPage() {
           Winner Panel
         </motion.h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
           <motion.div 
             className="md:col-span-2"
             variants={fadeInUp}
