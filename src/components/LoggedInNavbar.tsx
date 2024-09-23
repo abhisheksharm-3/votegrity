@@ -54,9 +54,10 @@ const LoggedInNavbar: React.FC<LoggedInNavbarProps> = ({ isLandingPage }) => {
                         <Link
                             href={item.href}
                             key={index}
-                            className={`font-medium hover:-translate-y-2 ease-in-out duration-400 ${!isLandingPage ? "text-white" : ""}`}
+                            className={`font-medium relative group ${!isLandingPage ? "text-white" : ""}`}
                         >
                             {item.label}
+                            <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-current transition-all group-hover:w-full"></span>
                         </Link>
                     ))}
                     <Dropdown>
@@ -121,10 +122,11 @@ const LoggedInNavbar: React.FC<LoggedInNavbarProps> = ({ isLandingPage }) => {
                     {navItems.map((item, index) => (
                         <NavbarMenuItem key={`${item}-${index}`}>
                             <Link
-                                className="w-full"
+                                className="w-full relative group"
                                 href={item.href}
                             >
                                 {item.label}
+                                <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-current transition-all group-hover:w-full"></span>
                             </Link>
                         </NavbarMenuItem>
                     ))}

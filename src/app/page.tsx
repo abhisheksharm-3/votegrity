@@ -34,6 +34,8 @@ export default function Home() {
             <Button
               className="text-maindark uppercase font-normal tracking-widest"
               variant="bordered"
+              as={Link}
+              href="/about-us"
             >
               Read More
             </Button>

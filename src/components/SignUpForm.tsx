@@ -10,6 +10,7 @@ import PasswordStrengthBar from 'react-password-strength-bar';
 import { ethers } from 'ethers';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 const formSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
@@ -206,7 +207,12 @@ const SignUpForm = () => {
             </FormItem>
           )}
         />
-        {error && <p className="text-red-500">{error}</p>}
+        {error && (
+              <Alert variant="destructive">
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
         <Button type="submit" disabled={isLoading} className="border-2 border-[#94C358] w-max text-white uppercase tracking-widest" variant="bordered">
           {isLoading ? 'Registering...' : 'Register'}
         </Button>
