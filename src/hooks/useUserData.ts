@@ -5,7 +5,7 @@ import { User } from "@/lib/types";
 
 export const useUserData = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [walletAddress, setWalletAddress] = useState(null);
+  const [walletAddress, setWalletAddress] = useState<String | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 

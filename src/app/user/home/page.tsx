@@ -43,7 +43,7 @@ export default function HomePage() {
         </motion.h1>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <VoterProfile user={user} walletAddress={walletAddress} />
+          <VoterProfile />
           <VoterDetails userData={mockUserData} />
           <ImportantInformation info={otherInfo} />
           <UpcomingElections />
