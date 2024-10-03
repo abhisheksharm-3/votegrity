@@ -305,7 +305,7 @@ const VoterRegistrationForm: React.FC<VoterRegistrationFormProps> = ({ onSubmit 
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="driverLicense">Driver's License</SelectItem>
+                          <SelectItem value="driverLicense">Driver&apos;s License</SelectItem>
                           <SelectItem value="stateID">State ID</SelectItem>
                           <SelectItem value="passport">Passport</SelectItem>
                         </SelectContent>
