@@ -6,10 +6,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
 import { CalendarIcon } from 'lucide-react'
 import { format } from 'date-fns'
 import { Election } from '@/lib/types'
+import { CalendarDate, today, getLocalTimeZone } from "@internationalized/date";
+import { Calendar } from '@nextui-org/react'
 
 interface ElectionDetailsTabProps {
   election: Election
@@ -94,10 +95,15 @@ function DatePickerField({ label, date, onSelect }: DatePickerFieldProps) {
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0">
           <Calendar
-            mode="single"
-            selected={date}
-            onSelect={onSelect}
-            initialFocus
+            defaultValue={today(getLocalTimeZone())}
+            minValue={today(getLocalTimeZone())}
+            value={date ? new CalendarDate(date.getFullYear(), date.getMonth() + 1, date.getDate()) : undefined}
+            onChange={(date) => {
+              if (date) {
+                onSelect
+              }
+            }}
+            showMonthAndYearPickers
           />
         </PopoverContent>
       </Popover>

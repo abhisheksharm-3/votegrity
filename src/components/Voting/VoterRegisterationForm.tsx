@@ -6,7 +6,6 @@ import { FormValues, formSchema, IdType, CitizenshipStatus } from '@/lib/schemas
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
   CardHeader,
@@ -51,6 +50,8 @@ import {
 import { Separator } from '../ui/separator';
 import { Badge } from '../ui/badge';
 import { Checkbox } from '../ui/checkbox';
+import { Calendar } from '@nextui-org/react';
+import { CalendarDate, today, getLocalTimeZone } from "@internationalized/date";
 
 interface VoterRegistrationFormProps {
   onSubmit: (values: FormValues, idDocument: File | null) => void;
@@ -160,13 +161,16 @@ const VoterRegistrationForm: React.FC<VoterRegistrationFormProps> = ({ onSubmit 
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) =>
-                            date > new Date() || date < new Date("1900-01-01")
-                          }
-                          initialFocus
+                          defaultValue={today(getLocalTimeZone())}
+                          minValue={new CalendarDate(1900, 1, 1)}
+                          value={field.value ? new CalendarDate(field.value.getFullYear(), field.value.getMonth() + 1, field.value.getDate()) : undefined}
+                          onChange={(date) => {
+                              if (date) {
+                                  field.onChange(new Date(date.year, date.month - 1, date.day));
+                              }
+                          }}
+                          showMonthAndYearPickers
+                          
                         />
                       </PopoverContent>
                     </Popover>
