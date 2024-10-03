@@ -38,7 +38,7 @@ export default function UserSettings() {
             <div className="p-6">
                 <div className="mx-auto max-w-4xl">
                     <motion.h1 
-                        className="mb-8 text-4xl font-bold text-green-600"
+                        className="text-white/70 font-medium text-4xl lg:text-5xl font-playfair mb-8"
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
