@@ -37,15 +37,15 @@ import {
 } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { 
-  CalendarIcon, 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  FileCheck, 
+import {
+  CalendarIcon,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  FileCheck,
   CheckCircle2,
-  Flag 
+  Flag
 } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { Badge } from '../ui/badge';
@@ -65,6 +65,7 @@ const VoterRegistrationForm: React.FC<VoterRegistrationFormProps> = ({ onSubmit 
     defaultValues: {
       firstName: "",
       lastName: "",
+      gender: undefined,
       address: "",
       city: "",
       state: "",
@@ -107,7 +108,7 @@ const VoterRegistrationForm: React.FC<VoterRegistrationFormProps> = ({ onSubmit 
                 <h3 className="text-lg font-semibold">Personal Information</h3>
               </div>
               <Separator />
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
@@ -165,18 +166,40 @@ const VoterRegistrationForm: React.FC<VoterRegistrationFormProps> = ({ onSubmit 
                           minValue={new CalendarDate(1900, 1, 1)}
                           value={field.value ? new CalendarDate(field.value.getFullYear(), field.value.getMonth() + 1, field.value.getDate()) : undefined}
                           onChange={(date) => {
-                              if (date) {
-                                  field.onChange(new Date(date.year, date.month - 1, date.day));
-                              }
+                            if (date) {
+                              field.onChange(new Date(date.year, date.month - 1, date.day));
+                            }
                           }}
                           showMonthAndYearPickers
-                          
+
                         />
                       </PopoverContent>
                     </Popover>
                     <FormDescription>
                       You must be at least 18 years old to register
                     </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Gender <span className="text-red-500">*</span></FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-background">
+                          <SelectValue placeholder="Select your gender" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="driverLicense">Male</SelectItem>
+                        <SelectItem value="stateID">Female</SelectItem>
+                        <SelectItem value="passport">Others</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -422,8 +445,8 @@ const VoterRegistrationForm: React.FC<VoterRegistrationFormProps> = ({ onSubmit 
         <Button variant="outline" type="button">
           Save Draft
         </Button>
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           onClick={form.handleSubmit(handleSubmit)}
           className="bg-primary"
         >

@@ -17,6 +17,15 @@ export interface User {
     bloodGroup: string;
   }
 
+  export interface UserData {
+    city: string;
+    state: string;
+    address: string;
+    year: string;
+    gender: string;
+    dateOfBirth: string,
+  }
+
   export interface Election {
     id: number
     title: string

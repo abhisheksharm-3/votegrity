@@ -44,7 +44,7 @@ export default function HomePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <VoterProfile />
-          <VoterDetails userData={mockUserData} />
+          <VoterDetails />
           <ImportantInformation info={otherInfo} />
           <UpcomingElections />
         </div>

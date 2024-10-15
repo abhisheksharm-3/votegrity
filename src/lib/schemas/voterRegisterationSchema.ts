@@ -3,6 +3,9 @@ import { z } from 'zod';
 export const formSchema = z.object({
   firstName: z.string().min(2, { message: "First name must be at least 2 characters." }),
   lastName: z.string().min(2, { message: "Last name must be at least 2 characters." }),
+  gender: z.enum(["male", "female", "other"], {
+    required_error: "Gender is required.",
+  }),
   dateOfBirth: z.date({
     required_error: "Date of birth is required.",
   }),

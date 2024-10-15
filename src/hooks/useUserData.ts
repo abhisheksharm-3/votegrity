@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getLoggedInUser, getWalletAddress } from "@/lib/server/appwrite";
+import { getLoggedInUser, getWalletAddress, checkRegisteredVoter } from "@/lib/server/appwrite";
 import { User } from "@/lib/types";
+import { Models } from "node-appwrite";
 
 export const useUserData = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [walletAddress, setWalletAddress] = useState<String | null>(null);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [registeredVoterData, setRegisteredVoterData] = useState<Models.Document | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
@@ -17,8 +19,11 @@ export const useUserData = () => {
           router.push("/login");
         } else {
           setUser(loggedInUser);
-          const data = await getWalletAddress(loggedInUser.$id);
-          setWalletAddress(data.walletAddress);
+          const walletData = await getWalletAddress(loggedInUser.$id);
+          setWalletAddress(walletData.walletAddress);
+          
+          const voterData = await checkRegisteredVoter(loggedInUser.$id);
+          setRegisteredVoterData(voterData);
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -29,5 +34,11 @@ export const useUserData = () => {
     fetchUserData();
   }, [router]);
 
-  return { user, walletAddress, isLoading };
+  return { 
+    user, 
+    walletAddress, 
+    registeredVoterData, 
+    isRegisteredVoter: registeredVoterData !== null, 
+    isLoading 
+  };
 };
