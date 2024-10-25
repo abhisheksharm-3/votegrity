@@ -1,46 +1,40 @@
+import { FC } from 'react';
 import LayoutWithImage from "@/components/LayoutWithImage";
 import LoginForm from "@/components/LoginForm";
-import { Button } from "@nextui-org/react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 
-const Login = () => {
+const Login: FC = () => {
   return (
     <LayoutWithImage>
-      <div className="w-screen flex flex-row container items-center  h-screen">
-        <div className="w-screen flex flex-col gap-16 lg:gap-8 justify-center items-center -translate-y-10">
-          <h1 className="text-white/70 font-medium text-5xl font-playfair text-center">
-            Login to Your Account
-          </h1>
-          <div className="lg:w-8/12 flex items-center justify-center">
-            <div className="bg-white/90 rounded-2xl w-full py-10 flex flex-col items-center justify-center gap-8">
-              <h1 className="font-semibold font-playfair text-4xl text-center">
-                Good to see you again!
-              </h1>
-              <LoginForm />
-              <div className="flex item-center justify-around w-full container text-center"><Link
+      <div className="w-full flex flex-col items-center justify-center px-4 py-12">
+        <h1 className="text-white/70 font-medium text-3xl sm:text-4xl lg:text-5xl font-playfair text-center mb-8 lg:mb-16">
+          Login to Your Account
+        </h1>
+        <Card className="w-full max-w-4xl bg-white/90">
+          <CardHeader>
+            <CardTitle className="text-2xl sm:text-3xl lg:text-4xl font-playfair text-center">
+              Good to see you again!
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center justify-center gap-8">
+            <LoginForm />
+            <div className="flex flex-col sm:flex-row items-center justify-around w-full text-center gap-4 sm:gap-8">
+              <Link
                 href="/register"
-                className="text-[#004600] font-semibold text-base"
+                className="text-[#004600] font-semibold text-sm sm:text-base hover:underline"
               >
                 Don&apos;t have an account?
-              </Link><Link
+              </Link>
+              <Link
                 href="/forgot-password"
-                className="text-[#004600] font-semibold text-base"
+                className="text-[#004600] font-semibold text-sm sm:text-base hover:underline"
               >
                 Forgot Password?
-              </Link></div>
+              </Link>
             </div>
-          </div>
-        </div>
-        {/* <div className=" flex flex-col items-center justify-center w-2/12 2xl:w-1/12  whitespace-nowrap gap-5">
-          <h1 className="text-white/70 text-4xl tracking-wider">New Here?</h1>
-          <span className="text-center text-white/70 text-sm">
-            Become a member and <br /> voice your opinion!
-          </span>
-          <Button className="rounded-full bg-[#94C358] px-9 py-1 text-white font-semibold">
-            Sign Up
-          </Button>
-        </div> */} 
-        {/* The above component is discarded to improve design, may reintroduce later if found feaible */}
+          </CardContent>
+        </Card>
       </div>
     </LayoutWithImage>
   );

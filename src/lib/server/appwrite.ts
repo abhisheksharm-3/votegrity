@@ -1,40 +1,36 @@
 // src/lib/server/appwrite.js
 "use server";
-import { Client, Account, ID, Databases } from "node-appwrite";
+import { Client, Account, ID, Databases, Models } from "node-appwrite";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-export async function createSessionClient() {
-  const client = new Client()
+// Create a base client
+const createBaseClient = () => {
+  return new Client()
     .setEndpoint(process.env.APPWRITE_ENDPOINT!)
     .setProject(process.env.APPWRITE_PROJECT!);
+};
 
+// Create a session client
+export async function createSessionClient() {
+  const client = createBaseClient();
   const session = cookies().get("votegrity-session");
   if (!session || !session.value) {
     throw new Error("No session");
   }
-
   client.setSession(session.value);
-
-  return {
-    get account() {
-      return new Account(client);
-    },
-  };
+  return { account: new Account(client) };
 }
 
+// Create an admin client
 export async function createAdminClient() {
-  const client = new Client()
-    .setEndpoint(process.env.APPWRITE_ENDPOINT!)
-    .setProject(process.env.APPWRITE_PROJECT!)
-    .setKey(process.env.APPWRITE_KEY!);
-
-  return {
-    get account() {
-      return new Account(client);
-    },
+  const client = createBaseClient().setKey(process.env.APPWRITE_KEY!);
+  return { 
+    account: new Account(client),
+    databases: new Databases(client)
   };
 }
+
 export async function getLoggedInUser() {
   try {
     const { account } = await createSessionClient();
@@ -50,14 +46,7 @@ export async function signUpWithEmail(formData: FormData) {
   const name = formData.get("name") as string;
   const walletAddress = formData.get("walletAddress") as string;
 
-  const client = new Client()
-    .setEndpoint(process.env.APPWRITE_ENDPOINT!)
-    .setProject(process.env.APPWRITE_PROJECT!)
-    .setKey(process.env.APPWRITE_KEY!);
-
-  const databases = new Databases(client);
-
-  const { account } = await createAdminClient();
+  const { account, databases } = await createAdminClient();
 
   try {
     const user = await account.create(ID.unique(), email, password, name);
@@ -73,9 +62,7 @@ export async function signUpWithEmail(formData: FormData) {
       process.env.APPWRITE_DATABASE_ID!,
       process.env.APPWRITE_COLLECTION_ID!,
       user.$id,
-      {
-        walletAddress: walletAddress,
-      }
+      { walletAddress }
     );
 
     return { success: true, user, session };
@@ -84,6 +71,7 @@ export async function signUpWithEmail(formData: FormData) {
     return { error: "Registration failed", details: error };
   }
 }
+
 export async function signOut() {
   try {
     const { account } = await createSessionClient();
@@ -96,12 +84,7 @@ export async function signOut() {
 }
 
 export async function getWalletAddress(userId: string) {
-  const client = new Client()
-    .setEndpoint(process.env.APPWRITE_ENDPOINT!)
-    .setProject(process.env.APPWRITE_PROJECT!)
-    .setKey(process.env.APPWRITE_KEY!);
-
-  const databases = new Databases(client);
+  const { databases } = await createAdminClient();
 
   try {
     const document = await databases.getDocument(
@@ -115,8 +98,9 @@ export async function getWalletAddress(userId: string) {
     return { error: "Failed to fetch wallet address", details: error };
   }
 }
+
 export async function loginWithEmailAndWallet(email: string, password: string, walletAddress: string) {
-  const { account } = await createAdminClient(); 
+  const { account, databases } = await createAdminClient();
   try {
     const session = await account.createEmailPasswordSession(email, password);
     cookies().set("votegrity-session", session.secret, {
@@ -125,13 +109,6 @@ export async function loginWithEmailAndWallet(email: string, password: string, w
       sameSite: "strict",
       secure: true,
     });
-
-    const client = new Client()
-      .setEndpoint(process.env.APPWRITE_ENDPOINT!)
-      .setProject(process.env.APPWRITE_PROJECT!)
-      .setKey(process.env.APPWRITE_KEY!);
-
-    const databases = new Databases(client);
 
     const document = await databases.getDocument(
       process.env.APPWRITE_DATABASE_ID!,
@@ -147,5 +124,24 @@ export async function loginWithEmailAndWallet(email: string, password: string, w
   } catch (error) {
     console.error('Login error:', error);
     return { error: "Login failed", details: error };
+  }
+}
+
+export async function checkRegisteredVoter(userId: string): Promise<Models.Document | null> {
+  const { databases } = await createAdminClient();
+
+  try {
+    const document = await databases.getDocument<Models.Document>(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.REGISTERED_USER_DETAILS!,
+      userId
+    );
+    return document;
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 404) {
+      return null;
+    }
+    console.error("Error checking registered user:", error);
+    throw error;
   }
 }

@@ -15,7 +15,7 @@ const LayoutWithImage = ({
   return (
     <div
       className={cn(
-        "w-screen h-screen flex flex-col font-poppins bg-[url('/images/bg-svg.svg')] bg-cover bg-center bg-no-repeat",
+        "w-screen min-h-screen flex flex-col font-poppins bg-[url('/images/bg-svg.svg')] bg-cover bg-center bg-no-repeat",
         className
       )}
     >

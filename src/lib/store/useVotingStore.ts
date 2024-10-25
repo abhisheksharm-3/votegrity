@@ -1,6 +1,7 @@
-import create from 'zustand';
+import { create } from 'zustand';
 import { ethers } from 'ethers';
 import VotingContractJSON from '@/lib/Contracts/Voting.json';
+import { Election, PendingVoter } from '../types';
 
 const VotingABI = VotingContractJSON.abi;
 
@@ -8,9 +9,12 @@ interface VotingStore {
   contract: ethers.Contract | null;
   owner: string | null;
   workflowStatus: number;
+  currentElection: Election | null;
+  pendingVoters: PendingVoter[];
+
   initContract: (provider: ethers.BrowserProvider) => Promise<void>;
   registerVoter: (documentIPFSHash: string, profileImageIPFSHash: string) => Promise<void>;
-  approveRejectVoter: (voterAddress: string, status: number) => Promise<void>;
+  approveRejectVoter: (electionId: number, voterId: number, isApproved: boolean) => Promise<void>;
   updateVoter: (documentIPFSHash: string, profileImageIPFSHash: string) => Promise<void>;
   registerProposal: (name: string, documentIPFSHash: string, profileImageIPFSHash: string) => Promise<void>;
   approveRejectProposal: (proposalId: number, status: number) => Promise<void>;
@@ -27,16 +31,21 @@ interface VotingStore {
   getWinningProposal: () => Promise<number>;
   getProposal: (proposalId: number) => Promise<any>;
   getVoter: (voterAddress: string) => Promise<any>;
+  fetchElection: (id: string) => Promise<Election>;
+  updateElection: (election: Election) => Promise<void>;
+  fetchPendingVoters: (electionId: number) => Promise<void>;
 }
 
 const useVotingStore = create<VotingStore>((set, get) => ({
   contract: null,
   owner: null,
   workflowStatus: 0,
+  currentElection: null,
+  pendingVoters: [],
 
   initContract: async (provider) => {
-    const signer = provider.getSigner();
-    const contract = new ethers.Contract(process.env.VOTING_CONTRACT_ADDRESS!, VotingABI, await signer);
+    const signer = await provider.getSigner();
+    const contract = new ethers.Contract(process.env.NEXT_PUBLIC_VOTING_CONTRACT_ADDRESS!, VotingABI, signer);
     const owner = await contract.owner();
     const workflowStatus = await contract.workflowStatus();
     set({ contract, owner, workflowStatus });
@@ -48,10 +57,23 @@ const useVotingStore = create<VotingStore>((set, get) => ({
     await contract.registerVoter(documentIPFSHash, profileImageIPFSHash);
   },
 
-  approveRejectVoter: async (voterAddress, status) => {
+  approveRejectVoter: async (electionId: number, voterId: number, isApproved: boolean) => {
     const { contract } = get();
     if (!contract) throw new Error("Contract not initialized");
-    await contract.approveRejectVoter(voterAddress, status);
+    
+    try {
+      // Replace with actual contract call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      console.log(`Voter ${voterId} ${isApproved ? 'approved' : 'rejected'} for election ${electionId}`);
+      
+      // Update the pendingVoters list
+      set(state => ({
+        pendingVoters: state.pendingVoters.filter(voter => voter.id !== voterId)
+      }));
+    } catch (error) {
+      console.error('Error approving/rejecting voter:', error);
+      throw error;
+    }
   },
 
   updateVoter: async (documentIPFSHash, profileImageIPFSHash) => {
@@ -153,6 +175,39 @@ const useVotingStore = create<VotingStore>((set, get) => ({
     const { contract } = get();
     if (!contract) throw new Error("Contract not initialized");
     return await contract.getVoter(voterAddress);
+  },
+
+  fetchElection: async (id: string) => {
+    // Simulate API call (replace with actual API call in production)
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const mockElection: Election = {
+      id: parseInt(id),
+      title: "City Council Election 2023",
+      description: "Election for selecting new city council members",
+      status: "Active",
+      startDate: new Date("2023-08-01"),
+      endDate: new Date("2023-08-15"),
+      voters: 1500,
+    };
+    set({ currentElection: mockElection });
+    return mockElection;
+  },
+
+  updateElection: async (election: Election) => {
+    // Simulate API call (replace with actual API call in production)
+    await new Promise(resolve => setTimeout(resolve, 500));
+    set({ currentElection: election });
+  },
+
+  fetchPendingVoters: async (electionId: number) => {
+    // Simulate API call (replace with actual API call in production)
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const mockPendingVoters: PendingVoter[] = [
+      { id: 1, name: "John Doe", email: "john@example.com", registrationDate: "2023-07-15" },
+      { id: 2, name: "Jane Smith", email: "jane@example.com", registrationDate: "2023-07-16" },
+      { id: 3, name: "Bob Johnson", email: "bob@example.com", registrationDate: "2023-07-17" },
+    ];
+    set({ pendingVoters: mockPendingVoters });
   },
 }));
 
