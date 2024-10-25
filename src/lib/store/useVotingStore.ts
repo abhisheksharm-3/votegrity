@@ -1,214 +1,263 @@
 import { create } from 'zustand';
 import { ethers } from 'ethers';
-import VotingContractJSON from '@/lib/Contracts/Voting.json';
-import { Election, PendingVoter } from '../types';
+import VotingContractJSON from '@/lib/Contracts/VotingPlatform.json';
 
 const VotingABI = VotingContractJSON.abi;
+
+interface Election {
+  electionId: string;
+  creator: string;
+  title: string;
+  startTime: number;
+  endTime: number;
+  isActive: boolean;
+  totalVotes: number;
+  candidateIds: string[];
+  winningCandidateId: string;
+  resultsTallied: boolean;
+}
 
 interface VotingStore {
   contract: ethers.Contract | null;
   owner: string | null;
-  workflowStatus: number;
+  activeElections: string[];
   currentElection: Election | null;
-  pendingVoters: PendingVoter[];
 
+  // Contract Initialization
   initContract: (provider: ethers.BrowserProvider) => Promise<void>;
-  registerVoter: (documentIPFSHash: string, profileImageIPFSHash: string) => Promise<void>;
-  approveRejectVoter: (electionId: number, voterId: number, isApproved: boolean) => Promise<void>;
-  updateVoter: (documentIPFSHash: string, profileImageIPFSHash: string) => Promise<void>;
-  registerProposal: (name: string, documentIPFSHash: string, profileImageIPFSHash: string) => Promise<void>;
-  approveRejectProposal: (proposalId: number, status: number) => Promise<void>;
-  updateProposal: (proposalId: number, name: string, documentIPFSHash: string, profileImageIPFSHash: string) => Promise<void>;
-  vote: (proposalId: number) => Promise<void>;
-  getApprovedVoters: () => Promise<string[]>;
-  getApprovedProposals: (status: number) => Promise<number[]>;
+
+  // User Management
+  registerUser: (userId: string) => Promise<void>;
+
+  // Election Management
+  createElection: (
+    electionId: string,
+    title: string,
+    startTime: number,
+    endTime: number,
+    candidateIds: string[]
+  ) => Promise<void>;
+  
+  // Voting Functions
+  castVote: (electionId: string, candidateId: string) => Promise<void>;
+  
+  // Admin Functions
   setAdmin: (adminAddress: string, isAdmin: boolean) => Promise<void>;
-  startProposalRegistration: () => Promise<void>;
-  endProposalRegistration: () => Promise<void>;
-  startVotingSession: () => Promise<void>;
-  endVotingSession: () => Promise<void>;
-  tallyVotes: () => Promise<void>;
-  getWinningProposal: () => Promise<number>;
-  getProposal: (proposalId: number) => Promise<any>;
-  getVoter: (voterAddress: string) => Promise<any>;
-  fetchElection: (id: string) => Promise<Election>;
-  updateElection: (election: Election) => Promise<void>;
-  fetchPendingVoters: (electionId: number) => Promise<void>;
+  tallyElectionResults: (electionId: string) => Promise<void>;
+  
+  // View Functions
+  getElectionDetails: (electionId: string) => Promise<Election>;
+  getCandidateVotes: (electionId: string, candidateId: string) => Promise<number>;
+  isElectionActive: (electionId: string) => Promise<boolean>;
+  getWinningCandidate: (electionId: string) => Promise<{
+    winningCandidateId: string;
+    winningVoteCount: number;
+  }>;
+  getActiveElectionsCount: () => Promise<number>;
+  hasUserVoted: (electionId: string, voterAddress: string) => Promise<boolean>;
+  
+  // Election State Management
+  fetchElection: (electionId: string) => Promise<void>;
+  fetchActiveElections: () => Promise<void>;
 }
 
 const useVotingStore = create<VotingStore>((set, get) => ({
   contract: null,
   owner: null,
-  workflowStatus: 0,
+  activeElections: [],
   currentElection: null,
-  pendingVoters: [],
 
   initContract: async (provider) => {
-    const signer = await provider.getSigner();
-    const contract = new ethers.Contract(process.env.NEXT_PUBLIC_VOTING_CONTRACT_ADDRESS!, VotingABI, signer);
-    const owner = await contract.owner();
-    const workflowStatus = await contract.workflowStatus();
-    set({ contract, owner, workflowStatus });
-  },
-
-  registerVoter: async (documentIPFSHash, profileImageIPFSHash) => {
-    const { contract } = get();
-    if (!contract) throw new Error("Contract not initialized");
-    await contract.registerVoter(documentIPFSHash, profileImageIPFSHash);
-  },
-
-  approveRejectVoter: async (electionId: number, voterId: number, isApproved: boolean) => {
-    const { contract } = get();
-    if (!contract) throw new Error("Contract not initialized");
-    
     try {
-      // Replace with actual contract call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      console.log(`Voter ${voterId} ${isApproved ? 'approved' : 'rejected'} for election ${electionId}`);
-      
-      // Update the pendingVoters list
-      set(state => ({
-        pendingVoters: state.pendingVoters.filter(voter => voter.id !== voterId)
-      }));
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(
+        process.env.NEXT_PUBLIC_VOTING_CONTRACT_ADDRESS!,
+        VotingABI,
+        signer
+      );
+      const owner = await contract.owner();
+      set({ contract, owner });
     } catch (error) {
-      console.error('Error approving/rejecting voter:', error);
+      console.error('Failed to initialize contract:', error);
       throw error;
     }
   },
 
-  updateVoter: async (documentIPFSHash, profileImageIPFSHash) => {
+  registerUser: async (userId) => {
     const { contract } = get();
     if (!contract) throw new Error("Contract not initialized");
-    await contract.updateVoter(documentIPFSHash, profileImageIPFSHash);
+    try {
+      const tx = await contract.registerUser(userId);
+      await tx.wait();
+    } catch (error) {
+      console.error('Failed to register user:', error);
+      throw error;
+    }
   },
 
-  registerProposal: async (name, documentIPFSHash, profileImageIPFSHash) => {
+  createElection: async (electionId, title, startTime, endTime, candidateIds) => {
     const { contract } = get();
     if (!contract) throw new Error("Contract not initialized");
-    await contract.registerProposal(name, documentIPFSHash, profileImageIPFSHash);
+    try {
+      const tx = await contract.createElection(
+        electionId,
+        title,
+        startTime,
+        endTime,
+        candidateIds
+      );
+      await tx.wait();
+      await get().fetchActiveElections();
+    } catch (error) {
+      console.error('Failed to create election:', error);
+      throw error;
+    }
   },
 
-  approveRejectProposal: async (proposalId, status) => {
+  castVote: async (electionId, candidateId) => {
     const { contract } = get();
     if (!contract) throw new Error("Contract not initialized");
-    await contract.approveRejectProposal(proposalId, status);
-  },
-
-  updateProposal: async (proposalId, name, documentIPFSHash, profileImageIPFSHash) => {
-    const { contract } = get();
-    if (!contract) throw new Error("Contract not initialized");
-    await contract.updateProposal(proposalId, name, documentIPFSHash, profileImageIPFSHash);
-  },
-
-  vote: async (proposalId) => {
-    const { contract } = get();
-    if (!contract) throw new Error("Contract not initialized");
-    await contract.vote(proposalId);
-  },
-
-  getApprovedVoters: async () => {
-    const { contract } = get();
-    if (!contract) throw new Error("Contract not initialized");
-    return await contract.getApprovedVoters();
-  },
-
-  getApprovedProposals: async (status) => {
-    const { contract } = get();
-    if (!contract) throw new Error("Contract not initialized");
-    return await contract.getApprovedProposals(status);
+    try {
+      const tx = await contract.castVote(electionId, candidateId);
+      await tx.wait();
+      await get().fetchElection(electionId);
+    } catch (error) {
+      console.error('Failed to cast vote:', error);
+      throw error;
+    }
   },
 
   setAdmin: async (adminAddress, isAdmin) => {
     const { contract } = get();
     if (!contract) throw new Error("Contract not initialized");
-    await contract.setAdmin(adminAddress, isAdmin);
+    try {
+      const tx = await contract.setAdmin(adminAddress, isAdmin);
+      await tx.wait();
+    } catch (error) {
+      console.error('Failed to set admin:', error);
+      throw error;
+    }
   },
 
-  startProposalRegistration: async () => {
+  tallyElectionResults: async (electionId) => {
     const { contract } = get();
     if (!contract) throw new Error("Contract not initialized");
-    await contract.startProposalRegistration();
-    set({ workflowStatus: 1 });
+    try {
+      const tx = await contract.tallyElectionResults(electionId);
+      await tx.wait();
+      await get().fetchElection(electionId);
+    } catch (error) {
+      console.error('Failed to tally results:', error);
+      throw error;
+    }
   },
 
-  endProposalRegistration: async () => {
+  getElectionDetails: async (electionId) => {
     const { contract } = get();
     if (!contract) throw new Error("Contract not initialized");
-    await contract.endProposalRegistration();
-    set({ workflowStatus: 2 });
+    try {
+      const details = await contract.getElectionDetails(electionId);
+      return {
+        electionId,
+        creator: details[0],
+        title: details[1],
+        startTime: details[2].toNumber(),
+        endTime: details[3].toNumber(),
+        isActive: details[4],
+        totalVotes: details[5].toNumber(),
+        candidateIds: details[6],
+        winningCandidateId: details[7],
+        resultsTallied: details[8]
+      };
+    } catch (error) {
+      console.error('Failed to get election details:', error);
+      throw error;
+    }
   },
 
-  startVotingSession: async () => {
+  getCandidateVotes: async (electionId, candidateId) => {
     const { contract } = get();
     if (!contract) throw new Error("Contract not initialized");
-    await contract.startVotingSession();
-    set({ workflowStatus: 3 });
+    try {
+      const votes = await contract.getCandidateVotes(electionId, candidateId);
+      return votes.toNumber();
+    } catch (error) {
+      console.error('Failed to get candidate votes:', error);
+      throw error;
+    }
   },
 
-  endVotingSession: async () => {
+  isElectionActive: async (electionId) => {
     const { contract } = get();
     if (!contract) throw new Error("Contract not initialized");
-    await contract.endVotingSession();
-    set({ workflowStatus: 4 });
+    try {
+      return await contract.isElectionActive(electionId);
+    } catch (error) {
+      console.error('Failed to check election status:', error);
+      throw error;
+    }
   },
 
-  tallyVotes: async () => {
+  getWinningCandidate: async (electionId) => {
     const { contract } = get();
     if (!contract) throw new Error("Contract not initialized");
-    await contract.tallyVotes();
-    set({ workflowStatus: 5 });
+    try {
+      const [winningCandidateId, winningVoteCount] = await contract.getWinningCandidate(electionId);
+      return {
+        winningCandidateId,
+        winningVoteCount: winningVoteCount.toNumber()
+      };
+    } catch (error) {
+      console.error('Failed to get winning candidate:', error);
+      throw error;
+    }
   },
 
-  getWinningProposal: async () => {
+  getActiveElectionsCount: async () => {
     const { contract } = get();
     if (!contract) throw new Error("Contract not initialized");
-    return await contract.getWinningProposal();
+    try {
+      const count = await contract.getActiveElectionsCount();
+      return count.toNumber();
+    } catch (error) {
+      console.error('Failed to get active elections count:', error);
+      throw error;
+    }
   },
 
-  getProposal: async (proposalId) => {
+  hasUserVoted: async (electionId, voterAddress) => {
     const { contract } = get();
     if (!contract) throw new Error("Contract not initialized");
-    return await contract.getProposal(proposalId);
+    try {
+      return await contract.hasUserVoted(electionId, voterAddress);
+    } catch (error) {
+      console.error('Failed to check if user voted:', error);
+      throw error;
+    }
   },
 
-  getVoter: async (voterAddress) => {
+  fetchElection: async (electionId) => {
+    try {
+      const election = await get().getElectionDetails(electionId);
+      set({ currentElection: election });
+    } catch (error) {
+      console.error('Failed to fetch election:', error);
+      throw error;
+    }
+  },
+
+  fetchActiveElections: async () => {
     const { contract } = get();
     if (!contract) throw new Error("Contract not initialized");
-    return await contract.getVoter(voterAddress);
-  },
-
-  fetchElection: async (id: string) => {
-    // Simulate API call (replace with actual API call in production)
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const mockElection: Election = {
-      id: parseInt(id),
-      title: "City Council Election 2023",
-      description: "Election for selecting new city council members",
-      status: "Active",
-      startDate: new Date("2023-08-01"),
-      endDate: new Date("2023-08-15"),
-      voters: 1500,
-    };
-    set({ currentElection: mockElection });
-    return mockElection;
-  },
-
-  updateElection: async (election: Election) => {
-    // Simulate API call (replace with actual API call in production)
-    await new Promise(resolve => setTimeout(resolve, 500));
-    set({ currentElection: election });
-  },
-
-  fetchPendingVoters: async (electionId: number) => {
-    // Simulate API call (replace with actual API call in production)
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const mockPendingVoters: PendingVoter[] = [
-      { id: 1, name: "John Doe", email: "john@example.com", registrationDate: "2023-07-15" },
-      { id: 2, name: "Jane Smith", email: "jane@example.com", registrationDate: "2023-07-16" },
-      { id: 3, name: "Bob Johnson", email: "bob@example.com", registrationDate: "2023-07-17" },
-    ];
-    set({ pendingVoters: mockPendingVoters });
-  },
+    try {
+      // Get active elections array from contract
+      const activeElectionsArray = await contract.activeElections();
+      set({ activeElections: activeElectionsArray });
+    } catch (error) {
+      console.error('Failed to fetch active elections:', error);
+      throw error;
+    }
+  }
 }));
 
 export default useVotingStore;
