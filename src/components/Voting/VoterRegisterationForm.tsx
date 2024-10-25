@@ -55,9 +55,10 @@ import { CalendarDate, today, getLocalTimeZone } from "@internationalized/date";
 
 interface VoterRegistrationFormProps {
   onSubmit: (values: FormValues, idDocument: File | null) => void;
+  disabled?: boolean;
 }
 
-const VoterRegistrationForm: React.FC<VoterRegistrationFormProps> = ({ onSubmit }) => {
+const VoterRegistrationForm: React.FC<VoterRegistrationFormProps> = ({ onSubmit, disabled }) => {
   const [idDocument, setIdDocument] = React.useState<File | null>(null);
 
   const form = useForm<FormValues>({
@@ -195,9 +196,9 @@ const VoterRegistrationForm: React.FC<VoterRegistrationFormProps> = ({ onSubmit 
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="driverLicense">Male</SelectItem>
-                        <SelectItem value="stateID">Female</SelectItem>
-                        <SelectItem value="passport">Others</SelectItem>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="other">Others</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -442,13 +443,11 @@ const VoterRegistrationForm: React.FC<VoterRegistrationFormProps> = ({ onSubmit 
         </Form>
       </CardContent>
       <CardFooter className="flex justify-end space-x-4">
-        <Button variant="outline" type="button">
-          Save Draft
-        </Button>
         <Button
           type="submit"
           onClick={form.handleSubmit(handleSubmit)}
           className="bg-primary"
+          disabled={disabled}
         >
           Submit Registration
         </Button>

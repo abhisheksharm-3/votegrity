@@ -12,7 +12,7 @@ export const formSchema = z.object({
   address: z.string().min(10, { message: "Please enter a valid address." }),
   city: z.string().min(2, { message: "City is required." }),
   state: z.string().min(2, { message: "State is required." }),
-  zipCode: z.string().regex(/^\d{5}(-\d{4})?$/, { message: "Please enter a valid ZIP code." }),
+  zipCode: z.string().regex(/^\d{6}(-\d{6})?$/, { message: "Please enter a valid ZIP code." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
   phone: z.string().regex(/^\d{10}$/, { message: "Please enter a valid 10-digit phone number." }),
   idType: z.enum(["driverLicense", "stateID", "passport"], {
