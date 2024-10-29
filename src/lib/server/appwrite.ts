@@ -1,6 +1,6 @@
 // src/lib/server/appwrite.js
 "use server";
-import { Client, Account, ID, Databases, Models } from "node-appwrite";
+import { Client, Account, ID, Databases, Models, Storage, Query } from "node-appwrite";
 import { cookies } from "next/headers";
 import { FormValues } from "../schemas/voterRegisterationSchema";
 
@@ -26,6 +26,7 @@ export async function createSessionClient() {
 export async function createAdminClient() {
   const client = createBaseClient().setKey(process.env.APPWRITE_KEY!);
   return { 
+    client,
     account: new Account(client),
     databases: new Databases(client)
   };
@@ -131,12 +132,16 @@ export async function checkRegisteredVoter(userId: string): Promise<Models.Docum
   const { databases } = await createAdminClient();
 
   try {
-    const document = await databases.getDocument<Models.Document>(
+    const document = await databases.listDocuments<Models.Document>(
       process.env.APPWRITE_DATABASE_ID!,
       process.env.REGISTERED_USER_DETAILS!,
-      userId
+      [
+        Query.equal('userID', userId),
+        Query.limit(1)
+      ]
     );
-    return document;
+    return document.documents.length > 0 ? document.documents[0] : null;
+    
   } catch (error) {
     if (error instanceof Error && 'code' in error && error.code === 404) {
       return null;
@@ -157,18 +162,18 @@ export async function submitVoterRegistration(
         message: "User not authenticated",
       };
     }
-    const { databases } = await createAdminClient();
+    const { databases, client } = await createAdminClient();
     const idDocument = formData.get("idDocument") as File;
-    const storage = new Storage();
+    const storage = new Storage(client);
     let idDocumentUrl = null;
     if (idDocument) {
       const uploadResponse = await storage.createFile(
-        process.env.APPWRITE_BUCKET_ID!,
+        process.env.ID_DOCUMENT_BUCKET!,
         user.$id,
         idDocument
       );
       
-      idDocumentUrl = `${process.env.APPWRITE_ENDPOINT}/storage/buckets/${process.env.APPWRITE_BUCKET_ID}/files/${uploadResponse.$id}/view`;
+      idDocumentUrl = `${process.env.APPWRITE_ENDPOINT}/storage/buckets/${process.env.ID_DOCUMENT_BUCKET}/files/${uploadResponse.$id}/view?project=${process.env.APPWRITE_PROJECT}`;
     }
     const formValues: FormValues = {
       firstName: formData.get("firstName") as string,
@@ -192,11 +197,10 @@ export async function submitVoterRegistration(
       process.env.REGISTERED_USER_DETAILS!,
       ID.unique(),
       {
-        userId: user.$id,
+        userID: user.$id,
         ...formValues,
         dateOfBirth: formValues.dateOfBirth.toISOString(),
-        idDocumentUrl,
-        status: "pending",
+        idURL: idDocumentUrl,
       }
     );
 

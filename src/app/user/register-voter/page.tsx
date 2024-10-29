@@ -157,7 +157,7 @@ const RegisterVoter: React.FC = () => {
       });
 
       setTimeout(() => {
-        router.push("/user/dashboard");
+        router.push("/user/home");
       }, 3000);
 
     } catch (error) {

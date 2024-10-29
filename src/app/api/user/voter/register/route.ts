@@ -42,7 +42,6 @@ export async function POST(request: NextRequest) {
       "idType",
       "idNumber",
       "citizenship",
-      "termsAccepted",
     ];
 
     for (const field of requiredFields) {
