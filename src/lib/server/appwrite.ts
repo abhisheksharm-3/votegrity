@@ -2,7 +2,7 @@
 "use server";
 import { Client, Account, ID, Databases, Models } from "node-appwrite";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { FormValues } from "../schemas/voterRegisterationSchema";
 
 // Create a base client
 const createBaseClient = () => {
@@ -143,5 +143,82 @@ export async function checkRegisteredVoter(userId: string): Promise<Models.Docum
     }
     console.error("Error checking registered user:", error);
     throw error;
+  }
+}
+
+export async function submitVoterRegistration(
+  formData: FormData
+): Promise<{ success: boolean; message: string; data?: any }> {
+  try {
+    const user = await getLoggedInUser();
+    if (!user) {
+      return {
+        success: false,
+        message: "User not authenticated",
+      };
+    }
+    const { databases } = await createAdminClient();
+    const idDocument = formData.get("idDocument") as File;
+    const storage = new Storage();
+    let idDocumentUrl = null;
+    if (idDocument) {
+      const uploadResponse = await storage.createFile(
+        process.env.APPWRITE_BUCKET_ID!,
+        user.$id,
+        idDocument
+      );
+      
+      idDocumentUrl = `${process.env.APPWRITE_ENDPOINT}/storage/buckets/${process.env.APPWRITE_BUCKET_ID}/files/${uploadResponse.$id}/view`;
+    }
+    const formValues: FormValues = {
+      firstName: formData.get("firstName") as string,
+      lastName: formData.get("lastName") as string,
+      dateOfBirth: new Date(formData.get("dateOfBirth") as string),
+      gender: formData.get("gender") as FormValues["gender"],
+      address: formData.get("address") as string,
+      city: formData.get("city") as string,
+      state: formData.get("state") as string,
+      zipCode: formData.get("zipCode") as string,
+      email: formData.get("email") as string,
+      phone: formData.get("phone") as string,
+      idType: formData.get("idType") as FormValues["idType"],
+      idNumber: formData.get("idNumber") as string,
+      citizenship: formData.get("citizenship") as FormValues["citizenship"],
+      termsAccepted: formData.get("termsAccepted") === "true",
+    };
+
+    const registrationDocument = await databases.createDocument(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.REGISTERED_USER_DETAILS!,
+      ID.unique(),
+      {
+        userId: user.$id,
+        ...formValues,
+        dateOfBirth: formValues.dateOfBirth.toISOString(),
+        idDocumentUrl,
+        status: "pending",
+      }
+    );
+
+    return {
+      success: true,
+      message: "Voter registration submitted successfully",
+      data: registrationDocument,
+    };
+
+  } catch (error) {
+    console.error("Voter registration error:", error);
+    
+    if (error instanceof Error) {
+      return {
+        success: false,
+        message: `Registration failed: ${error.message}`,
+      };
+    }
+    
+    return {
+      success: false,
+      message: "An unexpected error occurred during registration",
+    };
   }
 }

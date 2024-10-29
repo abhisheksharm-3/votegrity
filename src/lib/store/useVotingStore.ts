@@ -22,9 +22,11 @@ interface VotingStore {
   owner: string | null;
   activeElections: string[];
   currentElection: Election | null;
+  isInitializing: boolean;
 
   // Contract Initialization
   initContract: (provider: ethers.BrowserProvider) => Promise<void>;
+  ensureContract: () => Promise<ethers.Contract>;
 
   // User Management
   registerUser: (userId: string) => Promise<void>;
@@ -61,14 +63,21 @@ interface VotingStore {
   fetchActiveElections: () => Promise<void>;
 }
 
+const MAX_INIT_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1 second
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 const useVotingStore = create<VotingStore>((set, get) => ({
   contract: null,
   owner: null,
   activeElections: [],
   currentElection: null,
+  isInitializing: false,
 
   initContract: async (provider) => {
     try {
+      set({ isInitializing: true });
       const signer = await provider.getSigner();
       const contract = new ethers.Contract(
         process.env.NEXT_PUBLIC_VOTING_CONTRACT_ADDRESS!,
@@ -80,13 +89,39 @@ const useVotingStore = create<VotingStore>((set, get) => ({
     } catch (error) {
       console.error('Failed to initialize contract:', error);
       throw error;
+    } finally {
+      set({ isInitializing: false });
     }
   },
 
-  registerUser: async (userId) => {
-    const { contract } = get();
-    if (!contract) throw new Error("Contract not initialized");
+  ensureContract: async () => {
+    const { contract, isInitializing } = get();
+    if (contract) return contract;
+    if (isInitializing) {
+      let retries = 0;
+      while (isInitializing && retries < MAX_INIT_RETRIES) {
+        await sleep(RETRY_DELAY);
+        retries++;
+      }
+      if (get().contract) return get().contract!;
+    }
     try {
+      // Check if window.ethereum exists
+      if (typeof window !== 'undefined' && window.ethereum) {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        await get().initContract(provider);
+        if (get().contract) return get().contract!;
+      }
+    } catch (error) {
+      console.error('Failed to auto-initialize contract:', error);
+    }
+    
+    throw new Error("Contract not initialized and auto-initialization failed");
+  },
+
+  registerUser: async (userId) => {
+    try {
+      const contract = await get().ensureContract();
       const tx = await contract.registerUser(userId);
       await tx.wait();
     } catch (error) {
@@ -96,9 +131,8 @@ const useVotingStore = create<VotingStore>((set, get) => ({
   },
 
   createElection: async (electionId, title, startTime, endTime, candidateIds) => {
-    const { contract } = get();
-    if (!contract) throw new Error("Contract not initialized");
     try {
+      const contract = await get().ensureContract();
       const tx = await contract.createElection(
         electionId,
         title,
@@ -115,9 +149,8 @@ const useVotingStore = create<VotingStore>((set, get) => ({
   },
 
   castVote: async (electionId, candidateId) => {
-    const { contract } = get();
-    if (!contract) throw new Error("Contract not initialized");
     try {
+      const contract = await get().ensureContract();
       const tx = await contract.castVote(electionId, candidateId);
       await tx.wait();
       await get().fetchElection(electionId);
@@ -128,9 +161,8 @@ const useVotingStore = create<VotingStore>((set, get) => ({
   },
 
   setAdmin: async (adminAddress, isAdmin) => {
-    const { contract } = get();
-    if (!contract) throw new Error("Contract not initialized");
     try {
+      const contract = await get().ensureContract();
       const tx = await contract.setAdmin(adminAddress, isAdmin);
       await tx.wait();
     } catch (error) {
@@ -140,9 +172,8 @@ const useVotingStore = create<VotingStore>((set, get) => ({
   },
 
   tallyElectionResults: async (electionId) => {
-    const { contract } = get();
-    if (!contract) throw new Error("Contract not initialized");
     try {
+      const contract = await get().ensureContract();
       const tx = await contract.tallyElectionResults(electionId);
       await tx.wait();
       await get().fetchElection(electionId);
@@ -153,9 +184,8 @@ const useVotingStore = create<VotingStore>((set, get) => ({
   },
 
   getElectionDetails: async (electionId) => {
-    const { contract } = get();
-    if (!contract) throw new Error("Contract not initialized");
     try {
+      const contract = await get().ensureContract();
       const details = await contract.getElectionDetails(electionId);
       return {
         electionId,
@@ -176,9 +206,8 @@ const useVotingStore = create<VotingStore>((set, get) => ({
   },
 
   getCandidateVotes: async (electionId, candidateId) => {
-    const { contract } = get();
-    if (!contract) throw new Error("Contract not initialized");
     try {
+      const contract = await get().ensureContract();
       const votes = await contract.getCandidateVotes(electionId, candidateId);
       return votes.toNumber();
     } catch (error) {
@@ -188,9 +217,8 @@ const useVotingStore = create<VotingStore>((set, get) => ({
   },
 
   isElectionActive: async (electionId) => {
-    const { contract } = get();
-    if (!contract) throw new Error("Contract not initialized");
     try {
+      const contract = await get().ensureContract();
       return await contract.isElectionActive(electionId);
     } catch (error) {
       console.error('Failed to check election status:', error);
@@ -199,9 +227,8 @@ const useVotingStore = create<VotingStore>((set, get) => ({
   },
 
   getWinningCandidate: async (electionId) => {
-    const { contract } = get();
-    if (!contract) throw new Error("Contract not initialized");
     try {
+      const contract = await get().ensureContract();
       const [winningCandidateId, winningVoteCount] = await contract.getWinningCandidate(electionId);
       return {
         winningCandidateId,
@@ -214,9 +241,8 @@ const useVotingStore = create<VotingStore>((set, get) => ({
   },
 
   getActiveElectionsCount: async () => {
-    const { contract } = get();
-    if (!contract) throw new Error("Contract not initialized");
     try {
+      const contract = await get().ensureContract();
       const count = await contract.getActiveElectionsCount();
       return count.toNumber();
     } catch (error) {
@@ -226,9 +252,8 @@ const useVotingStore = create<VotingStore>((set, get) => ({
   },
 
   hasUserVoted: async (electionId, voterAddress) => {
-    const { contract } = get();
-    if (!contract) throw new Error("Contract not initialized");
     try {
+      const contract = await get().ensureContract();
       return await contract.hasUserVoted(electionId, voterAddress);
     } catch (error) {
       console.error('Failed to check if user voted:', error);
@@ -247,10 +272,8 @@ const useVotingStore = create<VotingStore>((set, get) => ({
   },
 
   fetchActiveElections: async () => {
-    const { contract } = get();
-    if (!contract) throw new Error("Contract not initialized");
     try {
-      // Get active elections array from contract
+      const contract = await get().ensureContract();
       const activeElectionsArray = await contract.activeElections();
       set({ activeElections: activeElectionsArray });
     } catch (error) {

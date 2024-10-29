@@ -1,51 +1,89 @@
-// app/api/user/voter/register/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
+import { submitVoterRegistration } from "@/lib/server/appwrite";
+import { cookies } from "next/headers";
 
 export async function POST(request: NextRequest) {
   try {
-    // Parse the FormData
+    // Check if request is multipart/form-data
+    const contentType = request.headers.get("content-type");
+    if (!contentType?.includes("multipart/form-data")) {
+      return NextResponse.json(
+        { error: "Content type must be multipart/form-data" },
+        { status: 415 }
+      );
+    }
+
+    // Get session cookie
+    const cookieStore = cookies();
+    const sessionCookie = cookieStore.get("votegrity-session");
+    
+    if (!sessionCookie) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    // Parse the multipart form data
     const formData = await request.formData();
     
-    // Extract the fields
-    const formFields: Record<string, any> = {};
-    formData.forEach((value, key) => {
-      // Handle file separately
-      if (value instanceof File) {
-        formFields[key] = {
-          name: value.name,
-          type: value.type,
-          size: value.size
-        };
-      } else {
-        formFields[key] = value;
+    // Validate required fields
+    const requiredFields = [
+      "firstName",
+      "lastName",
+      "dateOfBirth",
+      "gender",
+      "address",
+      "city",
+      "state",
+      "zipCode",
+      "email",
+      "phone",
+      "idType",
+      "idNumber",
+      "citizenship",
+      "termsAccepted",
+    ];
+
+    for (const field of requiredFields) {
+      if (!formData.get(field)) {
+        return NextResponse.json(
+          { error: `Missing required field: ${field}` },
+          { status: 400 }
+        );
       }
-    });
+    }
 
-    // Log the received data (for development)
-    console.log('Received voter registration:', formFields);
+    // Submit voter registration using the Appwrite function
+    const result = await submitVoterRegistration(formData);
 
-    // Here you would typically:
-    // 1. Validate the input
-    // 2. Process the ID document
-    // 3. Store the data in your database
-    // 4. Handle any additional business logic
+    if (!result.success) {
+      return NextResponse.json(
+        { error: result.message },
+        { status: 400 }
+      );
+    }
 
     return NextResponse.json(
-      { 
-        success: true, 
-        message: 'Voter registration received successfully',
-        data: formFields  // In production, you might want to limit what you send back
+      {
+        message: result.message,
+        data: result.data,
       },
-      { status: 200 }
+      { status: 201 }
     );
 
   } catch (error) {
-    console.error('Voter registration error:', error);
+    console.error("API route error:", error);
+
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to process voter registration' 
-      },
+      { error: "An unexpected error occurred" },
       { status: 500 }
     );
   }

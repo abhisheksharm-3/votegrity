@@ -42,3 +42,20 @@ export interface User {
     email: string
     registrationDate: string
   }
+
+  export interface RegistrationState {
+    isSubmitting: boolean;
+    error: string | null;
+    isSuccess: boolean;
+  }
+  
+  export interface FileValidationOptions {
+    maxSize: number;
+    allowedTypes: string[];
+  }
+  export class RegistrationError extends Error {
+    constructor(message: string, public code?: string) {
+      super(message);
+      this.name = 'RegistrationError';
+    }
+  }
