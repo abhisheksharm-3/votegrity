@@ -9,27 +9,49 @@ import { Election } from '@/lib/types'
 import useVotingStore from '@/lib/store/useVotingStore'
 import ElectionDetailsTab from '@/components/Voting/ElectionDetailsTab'
 import VoterApprovalsTab from '@/components/Voting/VoterApprovalsTab'
+import fetchElection from '@/lib/mockData'
+
+// Dummy update election function
+const updateElection = async (election: Election): Promise<Election> => {
+  // Simulate API call delay
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  // In a real application, you would make an API call here
+  console.log('Updating election:', election);
+  
+  // Return the updated election data
+  return {
+    ...election,
+  };
+};
 
 export default function ElectionManagementPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [electionData, setElectionData] = useState<Election | null>(null)
-  const { 
-    fetchElection,
-    updateElection,
-  } = useVotingStore();
 
   useEffect(() => {
     const loadElection = async () => {
-      const election = await fetchElection(params.id)
-      setElectionData(election)
+      try {
+        const fetchedElection = await fetchElection(params.id)
+        // Only update state if we received valid election data
+        if (fetchedElection) {
+          setElectionData(fetchedElection)
+        } else {
+          console.error('No election data received')
+          setElectionData(null)
+        }
+      } catch (error) {
+        console.error('Error loading election:', error)
+        setElectionData(null)
+      }
     }
     loadElection()
-  }, [params.id])
+  }, [params.id, fetchElection])
 
   const handleSave = async (updatedElection: Election) => {
     try {
-      await updateElection(updatedElection)
-      setElectionData(updatedElection)
+      const result = await updateElection(updatedElection)
+      setElectionData(result)
       alert('Election details saved successfully!')
     } catch (error) {
       console.error('Error saving election:', error)
@@ -38,7 +60,15 @@ export default function ElectionManagementPage({ params }: { params: { id: strin
   }
 
   if (!electionData) {
-    return <div>Loading...</div>
+    return (
+      <LoggedInLayout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center h-32">
+            Loading...
+          </div>
+        </div>
+      </LoggedInLayout>
+    )
   }
 
   return (
