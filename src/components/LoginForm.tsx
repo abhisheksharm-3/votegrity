@@ -1,15 +1,16 @@
 "use client";
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import z from "zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
-import { Button, Input } from "@nextui-org/react";
+import * as z from "zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { RiGitRepositoryPrivateFill, RiUser5Fill, RiWallet3Fill } from "@remixicon/react";
 import { ethers } from 'ethers';
-import { redirect } from 'next/navigation';
-import { loginWithEmailAndWallet } from '@/lib/server/appwrite';
 import { useRouter } from 'next/navigation';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const formSchema = z.object({
   email: z.string().min(1, { message: "This field has to be filled." }).email("This is not a valid email."),
@@ -17,10 +18,10 @@ const formSchema = z.object({
   walletAddress: z.string().min(1, { message: "Wallet address is required." }),
 });
 
-const LoginForm = () => {
+const LoginForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter()
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -70,15 +71,16 @@ const LoginForm = () => {
 
       router.push('/user/home');
     } catch (err) {
-      console.error("Error during registration:", err);
-      setError(err instanceof Error ? err.message : "An error occurred during registration");
+      console.error("Error during login:", err);
+      setError(err instanceof Error ? err.message : "An error occurred during login");
     } finally {
       setIsLoading(false);
     }
   };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="email"
@@ -86,7 +88,10 @@ const LoginForm = () => {
             <FormItem>
               <FormLabel>Your Email</FormLabel>
               <FormControl>
-                <Input placeholder="example@example.com" {...field} startContent={<RiUser5Fill />} />
+                <div className="relative">
+                  <RiUser5Fill className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                  <Input placeholder="example@example.com" {...field} className="pl-10" />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -99,7 +104,10 @@ const LoginForm = () => {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="********" {...field} startContent={<RiGitRepositoryPrivateFill />} />
+                <div className="relative">
+                  <RiGitRepositoryPrivateFill className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                  <Input type="password" placeholder="********" {...field} className="pl-10" />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -112,14 +120,21 @@ const LoginForm = () => {
             <FormItem>
               <FormLabel>Wallet Address</FormLabel>
               <FormControl>
-                <Input {...field} startContent={<RiWallet3Fill />} readOnly />
+                <div className="relative">
+                  <RiWallet3Fill className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                  <Input {...field} className="pl-10" readOnly />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        {error && <p className="text-red-500">{error}</p>}
-        <Button type="submit" disabled={isLoading}>
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? 'Logging in...' : 'Login'}
         </Button>
       </form>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
-import VotingContractJSON from '@/lib/Contracts/Voting.json';
+import VotingContractJSON from '@/lib/Contracts/VotingPlatform.json';
 import useVotingStore from '../store/useVotingStore';
 import { MetaMaskInpageProvider } from "@metamask/providers";
 

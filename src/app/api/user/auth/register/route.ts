@@ -1,45 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ethers } from 'ethers';
-import VotingContractJSON from '@/lib/Contracts/Voting.json';
 import { signUpWithEmail } from '@/lib/server/appwrite';
-
-const VotingABI = VotingContractJSON.abi;
 
 export async function POST(request: NextRequest) {
   try {
+    // Extract request data
     const { name, email, walletAddress, password } = await request.json();
 
+    // Validate required fields
     if (!name || !email || !walletAddress || !password) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Missing required fields' }, 
+        { status: 400 }
+      );
     }
 
+    // Prepare form data for Appwrite
     const formData = new FormData();
     formData.append('name', name);
     formData.append('email', email);
     formData.append('password', password);
     formData.append('walletAddress', walletAddress);
 
+    // Handle Appwrite signup
     const signUpResult = await signUpWithEmail(formData);
-
     if (signUpResult.error) {
-      return NextResponse.json({ error: signUpResult.error }, { status: 400 });
+      return NextResponse.json(
+        { error: signUpResult.error }, 
+        { status: 400 }
+      );
     }
 
-    const provider = new ethers.JsonRpcProvider();
-    const signer = provider.getSigner(0);
-    const contract = new ethers.Contract(process.env.VOTING_CONTRACT_ADDRESS!, VotingABI, await signer);
+    return NextResponse.json(
+      { 
+        success: true, 
+        message: 'Registration successful',
+        userId: signUpResult.user?.$id,
+        user: signUpResult.user  // Include user data from Appwrite if available
+      }, 
+      { status: 200 }
+    );
 
-    const documentIPFSHash = 'placeholder_document_hash';
-    const profileImageIPFSHash = 'placeholder_image_hash';
-
-    const tx = await contract.registerVoter(documentIPFSHash, profileImageIPFSHash);
-    await tx.wait();
-    console.log(tx)
-
-    // Instead of redirecting, send a success response
-    return NextResponse.json({ success: true, message: 'Registration successful' }, { status: 200 });
   } catch (error) {
     console.error('Registration error:', error);
-    return NextResponse.json({ error: 'Registration failed' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Registration failed' }, 
+      { status: 500 }
+    );
   }
 }

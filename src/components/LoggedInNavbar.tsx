@@ -3,6 +3,7 @@ import { getLoggedInUser } from "@/lib/server/appwrite";
 import { Button, Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenu, NavbarMenuItem, NavbarMenuToggle, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Avatar } from "@nextui-org/react";
 import Image from "next/image";
 import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
 import React, { useEffect, useState } from "react";
 
 interface User {
@@ -18,10 +19,12 @@ interface LoggedInNavbarProps {
 const LoggedInNavbar: React.FC<LoggedInNavbarProps> = ({ isLandingPage }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [user, setUser] = useState<User | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const navItems = [
         { label: "Home", href: "/user/home" },
-        { label: "How to Vote", href: "/how-to-vote" },
-        { label: "About Us", href: "/about-us" },
+        { label: "Create a Proposal", href: "/user/create-proposal" },
+        { label: "Vote", href: "/user/vote" },
+        { label: "My Elections", href: "/user/manage-elections" },
     ];
 
     useEffect(() => {
@@ -31,14 +34,40 @@ const LoggedInNavbar: React.FC<LoggedInNavbarProps> = ({ isLandingPage }) => {
                 setUser(loggedInUser);
             } catch (error) {
                 console.error("Failed to fetch user data:", error);
-                // Handle error (e.g., redirect to login page)
+            } finally {
+                setIsLoading(false);
             }
         }
         fetchUserData();
     }, []);
 
+    const NavbarSkeleton = () => (
+        <>
+            {/* Desktop Skeleton */}
+            <div className="container py-6 lg:flex items-center justify-between hidden">
+                <Skeleton className="h-12 w-48" />
+                <div className="flex justify-center items-center gap-8">
+                    {navItems.map((_, index) => (
+                        <Skeleton key={index} className="h-4 w-24" />
+                    ))}
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                </div>
+            </div>
+            
+            {/* Mobile Skeleton */}
+            <div className="w-full px-4 py-3 flex items-center justify-between lg:hidden">
+                <Skeleton className="h-8 w-8" /> {/* Menu toggle */}
+                <Skeleton className="h-10 w-32" /> {/* Logo */}
+                <Skeleton className="h-8 w-8 rounded-full" /> {/* Avatar */}
+            </div>
+        </>
+    );
+
+    if (isLoading) {
+        return <NavbarSkeleton />;
+    }
     if (!user) {
-        return null; // or a loading spinner
+        return null;
     }
 
     return (
@@ -53,9 +82,10 @@ const LoggedInNavbar: React.FC<LoggedInNavbarProps> = ({ isLandingPage }) => {
                         <Link
                             href={item.href}
                             key={index}
-                            className={`font-medium hover:-translate-y-2 ease-in-out duration-400 ${!isLandingPage ? "text-white" : ""}`}
+                            className={`font-medium relative group ${!isLandingPage ? "text-white" : ""}`}
                         >
                             {item.label}
+                            <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-current transition-all group-hover:w-full"></span>
                         </Link>
                     ))}
                     <Dropdown>
@@ -120,10 +150,11 @@ const LoggedInNavbar: React.FC<LoggedInNavbarProps> = ({ isLandingPage }) => {
                     {navItems.map((item, index) => (
                         <NavbarMenuItem key={`${item}-${index}`}>
                             <Link
-                                className="w-full"
+                                className="w-full relative group"
                                 href={item.href}
                             >
                                 {item.label}
+                                <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-current transition-all group-hover:w-full"></span>
                             </Link>
                         </NavbarMenuItem>
                     ))}
