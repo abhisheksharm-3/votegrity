@@ -226,3 +226,21 @@ export async function submitVoterRegistration(
     };
   }
 }
+export async function getUserElections(userId: string): Promise<Models.Document[]> {
+  const { databases } = await createAdminClient();
+
+  try {
+    const elections = await databases.listDocuments<Models.Document>(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.REGISTERED_USER_ELECTIONS!,
+      [
+        Query.equal('userID', userId)
+      ]
+    );
+
+    return elections.documents;
+  } catch (error) {
+    console.error("Error fetching user elections:", error);
+    throw error;
+  }
+}
