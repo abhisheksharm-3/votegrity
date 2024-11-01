@@ -3,6 +3,7 @@
 import { Client, Account, ID, Databases, Models, Storage, Query } from "node-appwrite";
 import { cookies } from "next/headers";
 import { FormValues } from "../schemas/voterRegisterationSchema";
+import { FormValues as ElectionFormValues } from "../schemas/formSchema";
 
 // Create a base client
 const createBaseClient = () => {
@@ -243,4 +244,50 @@ export async function getUserElections(userId: string): Promise<Models.Document[
     console.error("Error fetching user elections:", error);
     throw error;
   }
+}
+
+export async function createElectionInDB(values: ElectionFormValues, electionId: string) {
+    try {
+
+      const { databases } = await createAdminClient();
+        const election = await databases.createDocument(
+          process.env.APPWRITE_DATABASE_ID!,
+            process.env.ELECTIONS_COLLECTION_ID!,
+            electionId,
+            {
+                title: values.title,
+                description: values.description,
+                category: values.category,
+                startDate: values.startDate.toISOString(),
+                endDate: values.endDate.toISOString(),
+            }
+        );
+        const candidatePromises = values.candidates.map(candidate =>
+            databases.createDocument(
+              process.env.APPWRITE_DATABASE_ID!,
+              process.env.CANDIDATES_COLLECTION_ID!,
+                ID.unique(),
+                {
+                    candidateId: candidate.candidateId,
+                    electionId: electionId,
+                    name: candidate.name,
+                    age: candidate.age,
+                    gender: candidate.gender,
+                    qualifications: candidate.qualifications,
+                    pitch: candidate.pitch,
+                }
+            )
+        );
+        await Promise.all(candidatePromises);
+
+        return {
+            success: true,
+            electionId: electionId,
+            message: 'Election created successfully'
+        };
+
+    } catch (error) {
+        console.error('Error creating election:', error);
+        throw new Error('Failed to create election');
+    }
 }

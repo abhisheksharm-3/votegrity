@@ -141,7 +141,7 @@ const useVotingStore = create<VotingStore>((set, get) => ({
         candidateIds
       );
       await tx.wait();
-      await get().fetchActiveElections();
+      // await get().fetchActiveElections();
     } catch (error) {
       console.error('Failed to create election:', error);
       throw error;

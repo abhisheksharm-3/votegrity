@@ -71,6 +71,7 @@ const ElectionDetailsFields: React.FC<ElectionDetailsFieldsProps> = ({ control }
                                 <SelectItem value="corporate">Corporate</SelectItem>
                                 <SelectItem value="education">Education</SelectItem>
                                 <SelectItem value="nonprofit">Non-Profit</SelectItem>
+                                <SelectItem value="other">Other</SelectItem>
                             </SelectContent>
                         </Select>
                         <FormDescription>Choose the category that best fits your election.</FormDescription>
