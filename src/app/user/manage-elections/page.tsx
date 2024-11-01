@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
+import {Snippet} from "@nextui-org/snippet";
 import {
   Table,
   TableBody,
@@ -19,7 +21,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Search, Plus } from 'lucide-react'
+import { Search, Plus, Edit, Eye, CalendarCheck, Users, Code } from 'lucide-react'
 import LoggedInLayout from '@/components/LoggedInLayout'
 import { fetchOwnedElections } from '@/lib/server/appwrite'
 import {formatDate} from "@/lib/utils"
@@ -74,8 +76,61 @@ export default function MyElections() {
   if (isLoading) {
     return (
       <LoggedInLayout>
-        <div className="container mx-auto px-4 py-8 text-center">
-          Loading elections...
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+          <div className="flex justify-between items-center mb-8">
+            <Skeleton className="h-12 w-1/2" />
+            <Skeleton className="h-10 w-48" />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="md:col-span-2">
+              <CardHeader>
+                <Skeleton className="h-6 w-1/2 mb-2" />
+                <Skeleton className="h-4 w-3/4" />
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center space-x-4">
+                  <Skeleton className="h-10 flex-1" />
+                  <Skeleton className="h-10 w-32" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="flex flex-col justify-center">
+              <CardContent className="flex items-center justify-between p-6">
+                <div className="space-y-2">
+                  <Skeleton className="h-6 w-32" />
+                  <Skeleton className="h-8 w-24" />
+                </div>
+                <Skeleton className="h-10 w-10 rounded-full" />
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="mt-6">
+            <CardContent className="p-0 rounded-xl">
+              <Table className="rounded-xl">
+                <TableHeader>
+                  <TableRow>
+                    {['Title', 'Category', 'Dates', 'Candidates', 'Join Code', 'Actions'].map((header, index) => (
+                      <TableHead key={index}><Skeleton className="h-4 w-24" /></TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {[...Array(5)].map((_, index) => (
+                    <TableRow key={index}>
+                      {[...Array(6)].map((_, cellIndex) => (
+                        <TableCell key={cellIndex}>
+                          <Skeleton className="h-4 w-full" />
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </div>
       </LoggedInLayout>
     )
@@ -85,7 +140,10 @@ export default function MyElections() {
     return (
       <LoggedInLayout>
         <div className="container mx-auto px-4 py-8 text-red-500">
-          Error loading elections: {error.message}
+          <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
+            <h2 className="text-xl font-semibold mb-2">Oops! Something went wrong</h2>
+            <p>Error loading elections: {error.message}</p>
+          </div>
         </div>
       </LoggedInLayout>
     )
@@ -93,79 +151,152 @@ export default function MyElections() {
 
   return (
     <LoggedInLayout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-white/70 font-medium text-4xl lg:text-5xl font-playfair mb-8">My Elections</h1>
-          <Button asChild>
-            <Link href="/user/create-proposal">
-              <Plus className="mr-2 h-4 w-4" /> Create New Election
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-white/70 font-medium text-4xl lg:text-5xl font-playfair">
+            My Elections
+            <span className="text-sm text-white/60 ml-4">
+              ({filteredElections.length} total)
+            </span>
+          </h1>
+          <Button 
+            variant="default" 
+            className="bg-emerald-600 hover:bg-emerald-700 transition-colors duration-300"
+            asChild
+          >
+            <Link href="/user/create-proposal" className="flex items-center">
+              <Plus className="mr-2 h-5 w-5" /> Create New Election
             </Link>
           </Button>
         </div>
         
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Election Management</CardTitle>
-            <CardDescription>View and manage your created elections</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center space-x-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search elections..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8"
-                />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Search className="mr-2 h-6 w-6 text-primary" />
+                Election Management
+              </CardTitle>
+              <CardDescription>View, search, and manage your created elections</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center space-x-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search elections by title..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-8 border-primary/50 focus:ring-2 focus:ring-primary/30"
+                  />
+                </div>
+                <Button variant="outline" className="hover:bg-gray-100">
+                  Advanced Filter
+                </Button>
               </div>
-              <Button variant="outline">Filter</Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
+          <Card className="flex flex-col justify-center">
+            <CardContent className="flex items-center justify-between p-6">
+              <div>
+                <h3 className="text-lg font-semibold">Total Elections</h3>
+                <p className="text-3xl font-bold text-primary">{filteredElections.length}</p>
+              </div>
+              <CalendarCheck className="h-10 w-10 text-primary/70" />
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="mt-6">
           <CardContent className="p-0">
             {filteredElections.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No elections found
+              <div className="text-center py-12 px-4 bg-gray-50 rounded-b-lg">
+                <Users className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+                <h3 className="text-xl font-medium text-gray-600 mb-2">
+                  No Elections Found
+                </h3>
+                <p className="text-gray-500">
+                  You haven't created any elections yet. Get started by creating your first election!
+                </p>
+                <Button 
+                  variant="default" 
+                  className="mt-4 bg-primary hover:bg-primary/90"
+                  asChild
+                >
+                  <Link href="/user/create-proposal" className="flex items-center">
+                    <Plus className="mr-2 h-5 w-5" /> Create Election
+                  </Link>
+                </Button>
               </div>
             ) : (
               <Table>
-                <TableHeader>
+                <TableHeader className="bg-gray-50">
                   <TableRow>
-                    <TableHead>Election Title</TableHead>
+                    <TableHead className="w-1/4">Election Title</TableHead>
                     <TableHead>Category</TableHead>
-                    <TableHead>Start Date</TableHead>
-                    <TableHead>End Date</TableHead>
-                    <TableHead>Total Candidates</TableHead>
-                    <TableHead>Joining Code</TableHead>
+                    <TableHead>Dates</TableHead>
+                    <TableHead>Candidates</TableHead>
+                    <TableHead>
+                      <Code className="h-4 w-4 inline-block mr-1" />
+                      Join Code
+                    </TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredElections.map((election) => (
-                    <TableRow key={election.id}>
+                    <TableRow 
+                      key={election.id} 
+                      className="hover:bg-gray-50 transition-colors duration-200"
+                    >
                       <TableCell className="font-medium">{election.title}</TableCell>
                       <TableCell>
-                        <Badge>
+                        <Badge variant="secondary" className="capitalize">
                           {election.category}
                         </Badge>
                       </TableCell>
-                      <TableCell>{formatDate(election.startDate) || "Not set"}</TableCell>
-                      <TableCell>{formatDate(election.endDate) || "Not set"}</TableCell>
-                      <TableCell>{election.candidates || 0}</TableCell>
-                      <TableCell>{election.joinByCode || 0}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="text-xs text-gray-500">
+                            Start: {formatDate(election.startDate) || "Not set"}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            End: {formatDate(election.endDate) || "Not set"}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <Users className="h-4 w-4 mr-1 text-primary" />
+                          {election.candidates?.length || 0}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Snippet className="flex items-center" color="success">
+                          {election.joinByCode || "N/A"}
+                        </Snippet>
+                      </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
-                          <Button variant="outline" size="sm" asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="hover:bg-gray-100"
+                            asChild
+                          >
                             <Link href={`/user/manage-elections/${election.id}`}>
-                              View
+                              <Eye className="h-4 w-4 mr-1" /> View
                             </Link>
                           </Button>
-                          <Button variant="outline" size="sm" asChild>
-                            <Link href={`/user/manage-elections/${election.id}/edit`}>
-                              Edit
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="hover:bg-gray-100"
+                            asChild
+                          >
+                            <Link href={`/user/edit-election/${election.id}`}>
+                              <Edit className="h-4 w-4 mr-1" /> Edit
                             </Link>
                           </Button>
                         </div>
