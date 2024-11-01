@@ -1,6 +1,7 @@
 import * as z from 'zod';
 
 const candidateSchema = z.object({
+    candidateId: z.string().optional(),
     name: z.string().min(2, "Name must be at least 2 characters."),
     age: z.number().min(18, "Candidate must be at least 18 years old."),
     gender: z.string().min(1, "Please select a gender."),

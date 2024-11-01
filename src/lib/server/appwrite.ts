@@ -3,6 +3,8 @@
 import { Client, Account, ID, Databases, Models, Storage, Query } from "node-appwrite";
 import { cookies } from "next/headers";
 import { FormValues } from "../schemas/voterRegisterationSchema";
+import { FormValues as ElectionFormValues } from "../schemas/formSchema";
+import {generateJoinCode} from "@/lib/utils"
 
 // Create a base client
 const createBaseClient = () => {
@@ -225,4 +227,135 @@ export async function submitVoterRegistration(
       message: "An unexpected error occurred during registration",
     };
   }
+}
+
+export async function fetchOwnedElections(): Promise<Models.Document[]> {
+  const { databases } = await createAdminClient();
+
+  try {
+    const user = await getLoggedInUser();
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
+    const elections = await databases.listDocuments<Models.Document>(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.ELECTIONS_COLLECTION_ID!,
+      [
+        Query.orderDesc('startDate'),
+        Query.equal('owner', user.$id)
+      ]
+    );
+
+    return elections.documents;
+  } catch (error) {
+    console.error("Error fetching all elections:", error);
+    throw error;
+  }
+}
+
+export async function getUserElections(userId: string): Promise<Models.Document[]> {
+  const { databases } = await createAdminClient();
+
+  try {
+    const elections = await databases.listDocuments<Models.Document>(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.REGISTERED_USER_ELECTIONS!,
+      [
+        Query.equal('userID', userId)
+      ]
+    );
+
+    return elections.documents;
+  } catch (error) {
+    console.error("Error fetching user elections:", error);
+    throw error;
+  }
+}
+
+export async function createElectionInDB(values: ElectionFormValues, electionId: string) {
+    try {
+      const user = await getLoggedInUser();
+      if (!user) {
+        throw new Error("User not authenticated");}
+      const { databases } = await createAdminClient();
+                // Generate a unique join code
+                let joinByCode = generateJoinCode();
+                let isCodeUnique = false;
+                let attempts = 0;
+                const maxAttempts = 50;
+        
+                // Keep generating new codes until we find a unique one or hit max attempts
+                while (!isCodeUnique && attempts < maxAttempts) {
+                    try {
+                        // Try to find an existing election with this code
+                        const existing = await databases.listDocuments(
+                            process.env.APPWRITE_DATABASE_ID!,
+                            process.env.ELECTIONS_COLLECTION_ID!,
+                            [
+                                // Query to check if code exists
+                                Query.equal('joinByCode', joinByCode)
+                            ]
+                        );
+        
+                        if (existing.documents.length === 0) {
+                            isCodeUnique = true;
+                        } else {
+                            joinByCode = generateJoinCode();
+                            attempts++;
+                        }
+                    } catch (error) {
+                        console.error('Error checking join code uniqueness:', error);
+                        // If there's an error checking uniqueness, generate a new code and continue
+                        joinByCode = generateJoinCode();
+                        attempts++;
+                    }
+                }
+        
+                if (!isCodeUnique) {
+                    throw new Error('Unable to generate unique join code after maximum attempts');
+                }
+        const election = await databases.createDocument(
+          process.env.APPWRITE_DATABASE_ID!,
+            process.env.ELECTIONS_COLLECTION_ID!,
+            electionId,
+            {
+                title: values.title,
+                description: values.description,
+                category: values.category,
+                joinByCode: joinByCode,
+                candidates: values.candidates.map(candidate => candidate.candidateId),
+                startDate: values.startDate.toISOString(),
+                endDate: values.endDate.toISOString(),
+                owner: user.$id
+            }
+        );
+        const candidatePromises = values.candidates.map(candidate =>
+            databases.createDocument(
+              process.env.APPWRITE_DATABASE_ID!,
+              process.env.CANDIDATES_COLLECTION_ID!,
+                ID.unique(),
+                {
+                    candidateId: candidate.candidateId,
+                    electionId: electionId,
+                    name: candidate.name,
+                    age: candidate.age,
+                    gender: candidate.gender,
+                    qualifications: candidate.qualifications,
+                    pitch: candidate.pitch,
+                }
+            )
+        );
+        await Promise.all(candidatePromises);
+
+        return {
+            success: true,
+            electionId: electionId,
+            message: 'Election created successfully'
+        };
+
+    } catch (error) {
+        console.error('Error creating election:', error);
+        throw new Error('Failed to create election');
+    }
 }
