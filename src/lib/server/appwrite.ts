@@ -4,6 +4,7 @@ import { Client, Account, ID, Databases, Models, Storage, Query } from "node-app
 import { cookies } from "next/headers";
 import { FormValues } from "../schemas/voterRegisterationSchema";
 import { FormValues as ElectionFormValues } from "../schemas/formSchema";
+import {generateJoinCode} from "@/lib/utils"
 
 // Create a base client
 const createBaseClient = () => {
@@ -131,6 +132,43 @@ export async function loginWithEmailAndWallet(email: string, password: string, w
 
 export async function checkRegisteredVoter(userId: string): Promise<Models.Document | null> {
   const { databases } = await createAdminClient();
+
+          // Generate a unique join code
+          let joinByCode = generateJoinCode();
+          let isCodeUnique = false;
+          let attempts = 0;
+          const maxAttempts = 50;
+  
+          // Keep generating new codes until we find a unique one or hit max attempts
+          while (!isCodeUnique && attempts < maxAttempts) {
+              try {
+                  // Try to find an existing election with this code
+                  const existing = await databases.listDocuments(
+                      process.env.APPWRITE_DATABASE_ID!,
+                      process.env.ELECTIONS_COLLECTION_ID!,
+                      [
+                          // Query to check if code exists
+                          Query.equal('joinByCode', joinByCode)
+                      ]
+                  );
+  
+                  if (existing.documents.length === 0) {
+                      isCodeUnique = true;
+                  } else {
+                      joinByCode = generateJoinCode();
+                      attempts++;
+                  }
+              } catch (error) {
+                  console.error('Error checking join code uniqueness:', error);
+                  // If there's an error checking uniqueness, generate a new code and continue
+                  joinByCode = generateJoinCode();
+                  attempts++;
+              }
+          }
+  
+          if (!isCodeUnique) {
+              throw new Error('Unable to generate unique join code after maximum attempts');
+          }
 
   try {
     const document = await databases.listDocuments<Models.Document>(
