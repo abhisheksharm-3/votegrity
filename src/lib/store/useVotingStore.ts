@@ -39,6 +39,14 @@ interface VotingStore {
     endTime: number,
     candidateIds: string[]
   ) => Promise<void>;
+
+  updateElection: (
+    electionId: string,
+    title: string,
+    startTime: number,
+    endTime: number,
+    candidateIds: string[]
+  ) => Promise<void>;
   
   // Voting Functions
   castVote: (electionId: string, candidateId: string) => Promise<void>;
@@ -141,10 +149,34 @@ const useVotingStore = create<VotingStore>((set, get) => ({
         candidateIds
       );
       await tx.wait();
-      //TODO: Add this function to contract
-      // await get().fetchActiveElections();
+      await get().fetchActiveElections();
     } catch (error) {
       console.error('Failed to create election:', error);
+      throw error;
+    }
+  },
+  updateElection: async (
+    electionId: string, 
+    newTitle: string, 
+    newStartTime: number, 
+    newEndTime: number, 
+    newCandidateIds: string[]
+  ) => {
+    try {
+      const contract = await get().ensureContract();
+      const tx = await contract.updateElection(
+        electionId, 
+        newTitle, 
+        newStartTime, 
+        newEndTime, 
+        newCandidateIds
+      );
+      await tx.wait();
+      
+      // Refresh the current election details after update
+      await get().fetchElection(electionId);
+    } catch (error) {
+      console.error('Failed to update election:', error);
       throw error;
     }
   },
@@ -275,7 +307,7 @@ const useVotingStore = create<VotingStore>((set, get) => ({
   fetchActiveElections: async () => {
     try {
       const contract = await get().ensureContract();
-      const activeElectionsArray = await contract.activeElections();
+      const activeElectionsArray = await contract.getAllActiveElections();
       set({ activeElections: activeElectionsArray });
     } catch (error) {
       console.error('Failed to fetch active elections:', error);
