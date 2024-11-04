@@ -254,19 +254,58 @@ export async function fetchOwnedElections(): Promise<Models.Document[]> {
   }
 }
 
-export async function getUserElections(userId: string): Promise<Models.Document[]> {
+export async function getUserElections(): Promise<Models.Document[]> {
   const { databases } = await createAdminClient();
-
+  const user = await getLoggedInUser();
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
   try {
-    const elections = await databases.listDocuments<Models.Document>(
+    // First, get all user's election registrations
+    const userElections = await databases.listDocuments<Models.Document>(
       process.env.APPWRITE_DATABASE_ID!,
       process.env.REGISTERED_USER_ELECTIONS!,
       [
-        Query.equal('userID', userId)
+        Query.equal('userID', user.$id),
       ]
     );
 
-    return elections.documents;
+    // Fetch full election details for each registration
+    const enrichedElections = await Promise.all(
+      userElections.documents.map(async (userElection) => {
+        try {
+          const electionDetails = await databases.getDocument(
+            process.env.APPWRITE_DATABASE_ID!,
+            process.env.ELECTIONS_COLLECTION_ID!,
+            userElection.electionId
+          );
+
+          // Merge the election details with the user's registration info
+          return {
+            ...userElection,
+            detail: {
+              title: electionDetails.title,
+              description: electionDetails.description,
+              category: electionDetails.category,
+              joinByCode: electionDetails.joinByCode,
+              candidates: electionDetails.candidates,
+              startDate: electionDetails.startDate,
+              endDate: electionDetails.endDate,
+              owner: electionDetails.owner,
+              $id: electionDetails.$id,
+              $createdAt: electionDetails.$createdAt,
+              $updatedAt: electionDetails.$updatedAt,
+            }
+          };
+        } catch (error) {
+          console.error(`Error fetching details for election ${userElection.electionId}:`, error);
+          // Return the original userElection if we can't fetch the details
+          return userElection;
+        }
+      })
+    );
+
+    return enrichedElections;
   } catch (error) {
     console.error("Error fetching user elections:", error);
     throw error;
@@ -358,4 +397,87 @@ export async function createElectionInDB(values: ElectionFormValues, electionId:
         console.error('Error creating election:', error);
         throw new Error('Failed to create election');
     }
+}
+
+export async function joinElectionByCode(joinCode: string) {
+  try {
+    const user = await getLoggedInUser();
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
+    const { databases } = await createAdminClient();
+
+    const elections = await databases.listDocuments(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.ELECTIONS_COLLECTION_ID!,
+      [Query.equal('joinByCode', joinCode)]
+    );
+
+    if (elections.documents.length === 0) {
+      return {
+        success: false,
+        message: "Invalid join code"
+      };
+    }
+
+    const election = elections.documents[0];
+
+    // Check if user is already enrolled
+    const existingEnrollments = await databases.listDocuments(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.REGISTERED_USER_ELECTIONS!,
+      [
+        Query.equal('userID', user.$id),
+        Query.equal('electionId', election.$id)
+      ]
+    );
+
+    if (existingEnrollments.documents.length > 0) {
+      return {
+        success: false,
+        message: "You are already enrolled in this election"
+      };
+    }
+    const currentDate = new Date();
+    const startDate = new Date(election.startDate);
+    const endDate = new Date(election.endDate);
+
+    if (currentDate > endDate) {
+      return {
+        success: false,
+        message: "This election has already ended"
+      };
+    } else if(currentDate > startDate) {
+      return {
+        success: false,
+        message: "This election has already started"
+      };
+    }
+
+    await databases.createDocument(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.REGISTERED_USER_ELECTIONS!,
+      ID.unique(),
+      {
+        userID: user.$id,
+        electionId: election.$id,
+        status: "pending"
+      }
+    );
+
+    return {
+      success: true,
+      message: "Successfully joined the election",
+      election: election
+    };
+
+  } catch (error) {
+    console.error("Error joining election:", error);
+    return {
+      success: false,
+      message: "Failed to join election",
+      error: error instanceof Error ? error.message : "Unknown error"
+    };
+  }
 }

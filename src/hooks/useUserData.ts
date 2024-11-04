@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getLoggedInUser, getWalletAddress, checkRegisteredVoter, getUserElections } from "@/lib/server/appwrite";
+import { getLoggedInUser, getWalletAddress, checkRegisteredVoter, getUserElections, joinElectionByCode } from "@/lib/server/appwrite";
 import { User } from "@/lib/types";
 import { Models } from "node-appwrite";
 
@@ -28,7 +28,7 @@ export const useUserData = () => {
           const voterData = await checkRegisteredVoter(loggedInUser.$id);
           setRegisteredVoterData(voterData);
 
-          const userElections = await getUserElections(loggedInUser.$id);
+          const userElections = await getUserElections();
           setElections(userElections);
         }
       } catch (error) {
@@ -40,12 +40,32 @@ export const useUserData = () => {
     fetchUserData();
   }, [router]);
 
+  const joinElection = async (joinCode: string) => {
+    try {
+      const result = await joinElectionByCode(joinCode);
+      if (result.success) {
+        // Refresh elections list after successful join
+        const updatedElections = await getUserElections();
+        setElections(updatedElections);
+      }
+      return result;
+    } catch (error) {
+      console.error("Error joining election:", error);
+      return {
+        success: false,
+        message: "Failed to join election",
+        error: error instanceof Error ? error.message : "Unknown error"
+      };
+    }
+  };
+
   return { 
     user, 
     walletAddress, 
     registeredVoterData, 
     elections,
     isRegisteredVoter: registeredVoterData !== null, 
-    isLoading 
+    isLoading, 
+    joinElection
   };
 };
