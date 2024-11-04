@@ -9,8 +9,10 @@ import { Search, Calendar, Users, HelpCircle, Loader2 } from 'lucide-react'
 import { useUserData } from '@/hooks/useUserData'
 import LoggedInLayout from '@/components/LoggedInLayout'
 import { toast } from "sonner"
+import { useRouter } from 'next/navigation'
 
 export default function VoteList() {
+  const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
   const [electionCode, setElectionCode] = useState('')
   const [isJoining, setIsJoining] = useState(false)
@@ -25,6 +27,10 @@ export default function VoteList() {
     if (now < start) return "Upcoming"
     if (now > end) return "Ended"
     return "Ongoing"
+  }
+
+  const handleVoteNow = (electionId: string) => {
+    router.push(`/user/vote/${electionId}`)
   }
 
   const filteredElections = elections?.filter(election => {
@@ -65,6 +71,7 @@ export default function VoteList() {
       setIsJoining(false)
     }
   }
+
   if (isLoading) {
     return (
       <LoggedInLayout>
@@ -77,6 +84,7 @@ export default function VoteList() {
       </LoggedInLayout>
     );
   }
+
   return (
     <LoggedInLayout>
       <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -132,7 +140,17 @@ export default function VoteList() {
                         >
                           {status}
                         </Badge>
-                        <Button variant="outline" size="sm">View Details</Button>
+                        {status === "Ongoing" ? (
+                          <Button 
+                            onClick={() => handleVoteNow(election.detail.$id)}
+                            variant="default"
+                            size="sm"
+                          >
+                            Vote Now
+                          </Button>
+                        ) : (
+                          <Button variant="outline" size="sm">View Details</Button>
+                        )}
                       </CardFooter>
                     </Card>
                   )

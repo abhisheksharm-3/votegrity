@@ -18,10 +18,10 @@ export const UpcomingElections: React.FC = () => {
           {elections.length > 0 ? (
             elections.map((election) => (
               <Button
-                key={election.$id}
+                key={election.detail.$id}
                 className="w-full bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white font-semibold py-3 transition-all duration-300"
               >
-                {election.electionName}
+                {election.detail.title}
               </Button>
             ))
           ) : (

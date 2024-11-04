@@ -481,3 +481,153 @@ export async function joinElectionByCode(joinCode: string) {
     };
   }
 }
+
+export async function castVote(electionId: string, candidateId: string) {
+  try {
+    const user = await getLoggedInUser();
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
+    const { databases } = await createAdminClient();
+
+    // 1. Verify election exists and is active
+    const election = await databases.getDocument(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.ELECTIONS_COLLECTION_ID!,
+      electionId
+    );
+
+    const currentDate = new Date();
+    const startDate = new Date(election.startDate);
+    const endDate = new Date(election.endDate);
+
+    if (currentDate < startDate) {
+      return {
+        success: false,
+        message: "This election has not started yet"
+      };
+    }
+
+    if (currentDate > endDate) {
+      return {
+        success: false,
+        message: "This election has ended"
+      };
+    }
+
+    // 2. Verify user is registered for this election
+    const registrations = await databases.listDocuments(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.REGISTERED_USER_ELECTIONS!,
+      [
+        Query.equal('userID', user.$id),
+        Query.equal('electionId', electionId)
+      ]
+    );
+
+    if (registrations.documents.length === 0) {
+      return {
+        success: false,
+        message: "You are not registered for this election"
+      };
+    }
+
+    // 3. Check if user has already voted
+    const existingVotes = await databases.listDocuments(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.VOTES_COLLECTION_ID!,
+      [
+        Query.equal('userID', user.$id),
+        Query.equal('electionId', electionId)
+      ]
+    );
+
+    if (existingVotes.documents.length > 0) {
+      return {
+        success: false,
+        message: "You have already cast your vote in this election"
+      };
+    }
+
+    // 4. Verify candidate is valid for this election
+    if (!election.candidates.includes(candidateId)) {
+      return {
+        success: false,
+        message: "Invalid candidate selection"
+      };
+    }
+
+    // 5. Record the vote
+    const voteDocument = await databases.createDocument(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.VOTES_COLLECTION_ID!,
+      ID.unique(),
+      {
+        userID: user.$id,
+        electionId: electionId,
+        candidateId: candidateId,
+        // Store a hash of the vote for verification
+        // voteHash: await generateVoteHash(user.$id, electionId, candidateId)
+      }
+    );
+
+    // 6. Update user's election registration status
+    await databases.updateDocument(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.REGISTERED_USER_ELECTIONS!,
+      registrations.documents[0].$id,
+      {
+        status: "voted",
+        votedAt: new Date().toISOString()
+      }
+    );
+
+    return {
+      success: true,
+      message: "Vote cast successfully",
+      voteId: voteDocument.$id
+    };
+
+  } catch (error) {
+    console.error("Error casting vote:", error);
+    return {
+      success: false,
+      message: "Failed to cast vote",
+      error: error instanceof Error ? error.message : "Unknown error"
+    };
+  }
+}
+
+export async function getVotingStatistics(electionId: string) {
+  try {
+    const { databases } = await createAdminClient();
+    
+    const votes = await databases.listDocuments(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.VOTES_COLLECTION_ID!,
+      [Query.equal('electionId', electionId)]
+    );
+
+    const registrations = await databases.listDocuments(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.REGISTERED_USER_ELECTIONS!,
+      [Query.equal('electionId', electionId)]
+    );
+
+    return {
+      success: true,
+      totalVotes: votes.documents.length,
+      totalRegistered: registrations.documents.length,
+      turnoutPercentage: (votes.documents.length / registrations.documents.length) * 100
+    };
+
+  } catch (error) {
+    console.error("Error fetching voting statistics:", error);
+    return {
+      success: false,
+      message: "Failed to fetch voting statistics",
+      error: error instanceof Error ? error.message : "Unknown error"
+    };
+  }
+}
