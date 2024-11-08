@@ -5,27 +5,88 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Search, Calendar, Users, HelpCircle } from 'lucide-react'
+import { Search, Calendar, Users, HelpCircle, Loader2 } from 'lucide-react'
+import { useUserData } from '@/hooks/useUserData'
 import LoggedInLayout from '@/components/LoggedInLayout'
+import { toast } from "sonner"
+import { useRouter } from 'next/navigation'
 
 export default function VoteList() {
+  const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
   const [electionCode, setElectionCode] = useState('')
+  const [isJoining, setIsJoining] = useState(false)
+  const { elections, joinElection, isLoading } = useUserData()
 
-  const elections = [
-    { id: 1, title: "City Council Election", description: "Vote for your local city council representatives", startDate: "2023-08-01", endDate: "2023-08-15", status: "Ongoing", category: "Local" },
-    { id: 2, title: "Student Union Board", description: "Elect the new student union board members", startDate: "2023-09-01", endDate: "2023-09-07", status: "Upcoming", category: "Education" },
-    { id: 3, title: "Environmental Policy Referendum", description: "Vote on new environmental policies", startDate: "2023-08-20", endDate: "2023-09-03", status: "Upcoming", category: "Policy" },
-    { id: 4, title: "Company Board Election", description: "Shareholders vote for new board members", startDate: "2023-07-15", endDate: "2023-07-30", status: "Ended", category: "Corporate" },
-  ]
+  // Helper function to determine election status
+  const getElectionStatus = (startDate: string, endDate: string) => {
+    const now = new Date()
+    const start = new Date(startDate)
+    const end = new Date(endDate)
 
-  const filteredElections = elections.filter(election => 
-    election.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    election.category.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+    if (now < start) return "Upcoming"
+    if (now > end) return "Ended"
+    return "Ongoing"
+  }
 
-  const handleJoinElection = () => {
-    console.log(`Joining election with code: ${electionCode}`)
+  const handleVoteNow = (electionId: string) => {
+    router.push(`/user/vote/${electionId}`)
+  }
+
+  const handleViewResults = (electionId: string) => {
+    router.push(`/activities/winner/${electionId}`)
+  }
+
+  const filteredElections = elections?.filter(election => {
+    if (!election?.detail.title || !election?.detail.category) return false;
+    return (
+      election.detail.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      election.detail.category.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  }) || [];
+
+  const handleJoinElection = async () => {
+    if (!electionCode.trim()) {
+      toast.error("Error", {
+        description: "Please enter an election code",
+      })
+      return
+    }
+
+    try {
+      setIsJoining(true)
+      const result = await joinElection(electionCode)
+      
+      if (result.success) {
+        toast.success("Success", {
+          description: result.message,
+        })
+        setElectionCode('')
+      } else {
+        toast.error("Error", {
+          description: result.message,
+        })
+      }
+    } catch (error) {
+      toast.error("Error", {
+        description: "Failed to join election. Please try again.",
+      })
+    } finally {
+      setIsJoining(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <LoggedInLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="flex flex-col items-center gap-2">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading elections...</p>
+          </div>
+        </div>
+      </LoggedInLayout>
+    );
   }
 
   return (
@@ -52,30 +113,65 @@ export default function VoteList() {
             </div>
             
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredElections.map(election => (
-                <Card key={election.id} className="flex flex-col">
-                  <CardHeader>
-                    <CardTitle>{election.title}</CardTitle>
-                    <CardDescription>{election.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                      <Calendar className="h-4 w-4" />
-                      <span>{election.startDate} - {election.endDate}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Users className="h-4 w-4" />
-                      <span>{election.category}</span>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex justify-between items-center">
-                    <Badge variant={election.status === "Ongoing" ? "default" : election.status === "Upcoming" ? "secondary" : "outline"}>
-                      {election.status}
-                    </Badge>
-                    <Button variant="outline" size="sm">View Details</Button>
-                  </CardFooter>
-                </Card>
-              ))}
+              {filteredElections.length > 0 ? (
+                filteredElections.map(election => {
+                  const status = getElectionStatus(election.detail.startDate, election.detail.endDate)
+                  return (
+                    <Card key={election.detail.$id} className="flex flex-col">
+                      <CardHeader>
+                        <CardTitle>{election.detail.title}</CardTitle>
+                        <CardDescription>{election.detail.description}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="flex-grow">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                          <Calendar className="h-4 w-4" />
+                          <span>
+                            {new Date(election.detail.startDate).toLocaleDateString()} - {new Date(election.detail.endDate).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Users className="h-4 w-4" />
+                          <span>{election.detail.category}</span>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="flex justify-between items-center">
+                        <Badge 
+                          variant={
+                            status === "Ongoing" ? "default" : 
+                            status === "Upcoming" ? "secondary" : 
+                            "outline"
+                          }
+                        >
+                          {status}
+                        </Badge>
+                        {status === "Ongoing" ? (
+                          <Button 
+                            onClick={() => handleVoteNow(election.detail.$id)}
+                            variant="default"
+                            size="sm"
+                          >
+                            Vote Now
+                          </Button>
+                        ) : status === "Ended" ? (
+                          <Button 
+                            onClick={() => handleViewResults(election.detail.$id)}
+                            variant="secondary"
+                            size="sm"
+                          >
+                            View Results
+                          </Button>
+                        ) : (
+                          <Button variant="outline" size="sm">View Details</Button>
+                        )}
+                      </CardFooter>
+                    </Card>
+                  )
+                })
+              ) : (
+                <div className="col-span-full text-center text-muted-foreground py-8">
+                  No elections found
+                </div>
+              )}
             </div>
           </TabsContent>
           
@@ -93,7 +189,13 @@ export default function VoteList() {
                   onChange={(e) => setElectionCode(e.target.value)}
                   className="h-12"
                 />
-                <Button onClick={handleJoinElection} className="w-full h-12">Join Election</Button>
+                <Button 
+                  onClick={handleJoinElection} 
+                  className="w-full h-12"
+                  disabled={isJoining}
+                >
+                  {isJoining ? "Joining..." : "Join Election"}
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
