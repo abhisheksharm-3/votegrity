@@ -33,6 +33,10 @@ export default function VoteList() {
     router.push(`/user/vote/${electionId}`)
   }
 
+  const handleViewResults = (electionId: string) => {
+    router.push(`/activities/winner/${electionId}`)
+  }
+
   const filteredElections = elections?.filter(election => {
     if (!election?.detail.title || !election?.detail.category) return false;
     return (
@@ -147,6 +151,14 @@ export default function VoteList() {
                             size="sm"
                           >
                             Vote Now
+                          </Button>
+                        ) : status === "Ended" ? (
+                          <Button 
+                            onClick={() => handleViewResults(election.detail.$id)}
+                            variant="secondary"
+                            size="sm"
+                          >
+                            View Results
                           </Button>
                         ) : (
                           <Button variant="outline" size="sm">View Details</Button>

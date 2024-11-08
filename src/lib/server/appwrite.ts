@@ -738,3 +738,38 @@ export async function getLeadingCandidate(electionId: string) {
     };
   }
 }
+
+export async function getCandidateDetails(candidateId: string, electionId: string) {
+  try {
+    const { databases } = await createAdminClient();
+
+    const candidate = await databases.listDocuments(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.CANDIDATES_COLLECTION_ID!,
+      [
+        Query.equal('candidateId', candidateId),
+        Query.equal('electionId', electionId)
+      ]
+    );
+
+    if (candidate.documents.length === 0) {
+      return {
+        success: false,
+        message: "Candidate not found"
+      };
+    }
+
+    return {
+      success: true,
+      candidate: candidate.documents[0]
+    };
+
+  } catch (error) {
+    console.error("Error fetching candidate:", error);
+    return {
+      success: false,
+      message: "Failed to fetch candidate",
+      error: error instanceof Error ? error.message : "Unknown error"
+    };
+  }
+}
