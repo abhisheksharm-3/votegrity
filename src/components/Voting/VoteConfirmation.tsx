@@ -25,38 +25,46 @@ const checkMarkVariants = {
 };
 
 // Memoized background image component
-const BackgroundImage = memo(() => (
-  <img 
-    src="/images/thanks.svg" 
-    alt="Vote Received" 
-    className="w-full h-full object-cover"
-    loading="eager"
-  />
-));
+const BackgroundImage = memo(function BackgroundImage() {
+  return (
+    <img 
+      src="/images/thanks.svg" 
+      alt="Vote Received" 
+      className="w-full h-full object-cover"
+      loading="eager"
+    />
+  );
+});
 
 // Memoized leading candidate badge
-const LeadingCandidateBadge = memo(({ candidate }: { candidate: string }) => (
-  <Badge variant="secondary" className="px-4 py-2 text-lg font-semibold">
-    Leading Candidate: {candidate}
-  </Badge>
-));
+const LeadingCandidateBadge = memo(function LeadingCandidateBadge({ candidate }: { candidate: string }) {
+  return (
+    <Badge variant="secondary" className="px-4 py-2 text-lg font-semibold">
+      Leading Candidate: {candidate}
+    </Badge>
+  );
+});
 
 // Memoized thank you message
-const ThankYouMessage = memo(() => (
-  <div className="space-y-2">
-    <p className="text-xl font-medium text-primary-foreground/80">WE RECEIVED YOUR VOTE</p>
-    <h2 className="text-7xl font-bold font-playfair mb-8">Thank you!</h2>
-  </div>
-));
+const ThankYouMessage = memo(function ThankYouMessage() {
+  return (
+    <div className="space-y-2">
+      <p className="text-xl font-medium text-primary-foreground/80">WE RECEIVED YOUR VOTE</p>
+      <h2 className="text-7xl font-bold font-playfair mb-8">Thank you!</h2>
+    </div>
+  );
+});
 
 // Memoized footer message
-const FooterMessage = memo(() => (
-  <p className="text-xl text-primary-foreground/90 max-w-md mx-auto">
-    Your voice matters in shaping our future. We appreciate your participation in this important process.
-  </p>
-));
+const FooterMessage = memo(function FooterMessage() {
+  return (
+    <p className="text-xl text-primary-foreground/90 max-w-md mx-auto">
+      Your voice matters in shaping our future. We appreciate your participation in this important process.
+    </p>
+  );
+});
 
-const VoteConfirmation = ({ electionId }: { electionId: string }) => {
+function VoteConfirmation({ electionId }: { electionId: string }) {
   const [leadCandidate, setLeadCandidate] = useState("Loading...");
   
   useEffect(() => {
@@ -66,7 +74,7 @@ const VoteConfirmation = ({ electionId }: { electionId: string }) => {
       try {
         const response = await getLeadingCandidate(electionId);
         if (isMounted) {
-          setLeadCandidate(response.name);
+          setLeadCandidate(response.votingData?.leadingCandidate?.$id || "No candidate found");
         }
       } catch (error) {
         if (isMounted) {
@@ -81,7 +89,7 @@ const VoteConfirmation = ({ electionId }: { electionId: string }) => {
     return () => {
       isMounted = false;
     };
-  }, [electionId]); // Added electionId to dependency array
+  }, [electionId]);
 
   return (
     <Card className="bg-primary/5 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden border border-primary/10 hover:border-primary/20 transition-all duration-300">
@@ -109,6 +117,9 @@ const VoteConfirmation = ({ electionId }: { electionId: string }) => {
       </CardContent>
     </Card>
   );
-};
+}
 
-export default memo(VoteConfirmation);
+const MemoizedVoteConfirmation = memo(VoteConfirmation);
+MemoizedVoteConfirmation.displayName = 'VoteConfirmation';
+
+export default MemoizedVoteConfirmation;

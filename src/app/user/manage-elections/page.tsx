@@ -217,7 +217,7 @@ export default function MyElections() {
                   No Elections Found
                 </h3>
                 <p className="text-gray-500">
-                  You haven't created any elections yet. Get started by creating your first election!
+                  You haven&apos;t created any elections yet. Get started by creating your first election!
                 </p>
                 <Button 
                   variant="default" 
