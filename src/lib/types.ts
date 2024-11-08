@@ -59,3 +59,34 @@ export interface User {
       this.name = 'RegistrationError';
     }
   }
+
+  export interface AppwriteDocument {
+    $id: string;
+    name: string;
+    title?: string;
+    age?: number;
+    gender?: string;
+    qualifications?: string;
+    pitch?: string;
+  }
+  
+  export interface Candidate {
+    candidateId: string;
+    name: string;
+    age?: number;
+    gender?: string;
+    qualifications?: string;
+    pitch?: string;
+  }
+  
+  export interface CandidateSelectionProps {
+    selectedCandidate: string;
+    setSelectedCandidate: (candidate: string) => void;
+    isVoting: boolean;
+    handleVoteSubmit: () => void;
+    electionId: string;
+  }
+
+  export type ElectionDetailsResponse = 
+  | { success: true; election: AppwriteDocument; candidates: AppwriteDocument[] }
+  | { success: false; message: string; error: string };

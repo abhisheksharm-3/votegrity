@@ -49,7 +49,7 @@ interface VotingStore {
   ) => Promise<void>;
   
   // Voting Functions
-  castVote: (electionId: string, candidateId: string) => Promise<void>;
+  castVoteOnChain: (electionId: string, candidateId: string) => Promise<void>;
   
   // Admin Functions
   setAdmin: (adminAddress: string, isAdmin: boolean) => Promise<void>;
@@ -181,7 +181,7 @@ const useVotingStore = create<VotingStore>((set, get) => ({
     }
   },
 
-  castVote: async (electionId, candidateId) => {
+  castVoteOnChain: async (electionId, candidateId) => {
     try {
       const contract = await get().ensureContract();
       const tx = await contract.castVote(electionId, candidateId);

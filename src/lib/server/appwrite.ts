@@ -631,3 +631,110 @@ export async function getVotingStatistics(electionId: string) {
     };
   }
 }
+
+export async function getElectionDetails(electionId: string) {
+  try {
+    const { databases } = await createAdminClient();
+
+    // Fetch election details
+    const election = await databases.getDocument(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.ELECTIONS_COLLECTION_ID!,
+      electionId
+    );
+
+    // Fetch candidates
+    const candidates = await databases.listDocuments(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.CANDIDATES_COLLECTION_ID!,
+      [Query.equal('electionId', electionId)]
+    );
+
+    return {
+      success: true,
+      election,
+      candidates: candidates.documents
+    };
+
+  } catch (error) {
+    console.error("Error fetching election details:", error);
+    return {
+      success: false,
+      message: "Failed to fetch election details",
+      error: error instanceof Error ? error.message : "Unknown error"
+    };
+  }
+}
+export async function getLeadingCandidate(electionId: string) {
+  try {
+    const { databases } = await createAdminClient();
+
+    // First, get all votes for this election
+    const votes = await databases.listDocuments(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.VOTES_COLLECTION_ID!,
+      [Query.equal('electionId', electionId)]
+    );
+
+    // If no votes, return appropriate message
+    if (votes.documents.length === 0) {
+      return {
+        success: true,
+        message: "No votes have been cast in this election yet",
+        votingData: {
+          totalVotes: 0,
+          leadingCandidate: null,
+          voteCount: 0,
+          votePercentage: 0
+        }
+      };
+    }
+
+    // Count votes for each candidate
+    const voteCounts = votes.documents.reduce((acc: { [key: string]: number }, vote) => {
+      acc[vote.candidateId] = (acc[vote.candidateId] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Find the candidate with the most votes
+    const leadingCandidateId = Object.entries(voteCounts).reduce((a, b) => 
+      b[1] > a[1] ? b : a
+    )[0];
+
+    // Get the leading candidate's details
+    const leadingCandidate = await databases.listDocuments(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.CANDIDATES_COLLECTION_ID!,
+      [
+        Query.equal('candidateId', leadingCandidateId),
+        Query.equal('electionId', electionId)
+      ]
+    );
+
+    if (leadingCandidate.documents.length === 0) {
+      throw new Error("Leading candidate details not found");
+    }
+
+    const totalVotes = votes.documents.length;
+    const leadingVotes = voteCounts[leadingCandidateId];
+    const votePercentage = (leadingVotes / totalVotes) * 100;
+
+    return {
+      success: true,
+      votingData: {
+        totalVotes,
+        leadingCandidate: leadingCandidate.documents[0],
+        voteCount: leadingVotes,
+        votePercentage: Number(votePercentage.toFixed(2))
+      }
+    };
+
+  } catch (error) {
+    console.error("Error getting leading candidate:", error);
+    return {
+      success: false,
+      message: "Failed to get leading candidate",
+      error: error instanceof Error ? error.message : "Unknown error"
+    };
+  }
+}
