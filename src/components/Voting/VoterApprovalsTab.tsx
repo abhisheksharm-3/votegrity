@@ -6,55 +6,46 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Check, X } from 'lucide-react'
-import { PendingVoter } from '@/lib/types'
-import { approveRejectVoter, fetchPendingVoters } from '@/lib/mockData'
+import { useVoterManagement } from '@/lib/Hooks/useVoterManagement'
+import { toast } from 'sonner'
 
 interface VoterApprovalsTabProps {
-  electionId: number
+  electionId: string
 }
 
 export default function VoterApprovalsTab({ electionId }: VoterApprovalsTabProps) {
-  const [pendingVoters, setPendingVoters] = useState<PendingVoter[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { 
+    pendingVoters, 
+    isLoading, 
+    error, 
+    lastAction, 
+    updateVoter 
+  } = useVoterManagement(electionId);
+
 
   useEffect(() => {
-    const loadPendingVoters = async () => {
-      try {
-        setIsLoading(true);
-        const voters = await fetchPendingVoters(electionId);
-        setPendingVoters(voters);
-      } catch (error) {
-        console.error('Error loading pending voters:', error);
-        alert('Failed to load pending voters. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadPendingVoters();
-  }, [electionId]);
-
-  const handleApproveVoter = async (voterId: number) => {
-    try {
-      await approveRejectVoter(electionId, voterId, true);
-      // Update local state to remove the approved voter
-      setPendingVoters(current => current.filter(voter => voter.id !== voterId));
-    } catch (error) {
-      console.error('Error approving voter:', error);
-      alert('Failed to approve voter. Please try again.');
+    if (error) {
+      toast.error("Error", {
+        description: error
+      });
     }
-  }
+  }, [error, toast]);
 
-  const handleRejectVoter = async (voterId: number) => {
-    try {
-      await approveRejectVoter(electionId, voterId, false);
-      // Update local state to remove the rejected voter
-      setPendingVoters(current => current.filter(voter => voter.id !== voterId));
-    } catch (error) {
-      console.error('Error rejecting voter:', error);
-      alert('Failed to reject voter. Please try again.');
+  useEffect(() => {
+    if (lastAction.type && lastAction.message) {
+      toast.info(lastAction.success ? "Success" : "Error", {
+        description: lastAction.message
+      });
     }
-  }
+  }, [lastAction, toast]);
+
+  const handleApproveVoter = async (userId: string) => {
+    await updateVoter(userId, 'approved');
+  };
+
+  const handleRejectVoter = async (userId: string) => {
+    await updateVoter(userId, 'rejected');
+  };
 
   return (
     <Card>
@@ -94,11 +85,23 @@ export default function VoterApprovalsTab({ electionId }: VoterApprovalsTabProps
                     <TableCell>{voter.registrationDate}</TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <VoterDetailsDialog voter={voter} onApprove={handleApproveVoter} onReject={handleRejectVoter} />
-                        <Button variant="default" size="sm" onClick={() => handleApproveVoter(voter.id)}>
+                        <VoterDetailsDialog 
+                          voter={voter} 
+                          onApprove={handleApproveVoter} 
+                          onReject={handleRejectVoter} 
+                        />
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          onClick={() => handleApproveVoter(voter.userId)}
+                        >
                           <Check className="h-4 w-4" />
                         </Button>
-                        <Button variant="destructive" size="sm" onClick={() => handleRejectVoter(voter.id)}>
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          onClick={() => handleRejectVoter(voter.userId)}
+                        >
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
@@ -113,11 +116,17 @@ export default function VoterApprovalsTab({ electionId }: VoterApprovalsTabProps
     </Card>
   )
 }
-
+interface PendingVoter {
+  id: string;
+  userId: string;
+  name: string;
+  email: string;
+  registrationDate: string;
+}
 interface VoterDetailsDialogProps {
   voter: PendingVoter
-  onApprove: (voterId: number) => void
-  onReject: (voterId: number) => void
+  onApprove: (userId: string) => void
+  onReject: (userId: string) => void
 }
 
 function VoterDetailsDialog({ voter, onApprove, onReject }: VoterDetailsDialogProps) {
@@ -148,8 +157,8 @@ function VoterDetailsDialog({ voter, onApprove, onReject }: VoterDetailsDialogPr
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={() => onApprove(voter.id)}>Approve</Button>
-          <Button variant="outline" onClick={() => onReject(voter.id)}>Reject</Button>
+          <Button onClick={() => onApprove(voter.userId)}>Approve</Button>
+          <Button variant="outline" onClick={() => onReject(voter.userId)}>Reject</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

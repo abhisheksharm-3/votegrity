@@ -289,16 +289,6 @@ export default function MyElections() {
                               <Eye className="h-4 w-4 mr-1" /> View
                             </Link>
                           </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="hover:bg-gray-100"
-                            asChild
-                          >
-                            <Link href={`/user/edit-election/${election.id}`}>
-                              <Edit className="h-4 w-4 mr-1" /> Edit
-                            </Link>
-                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
