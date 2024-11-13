@@ -8,7 +8,7 @@ import { VoterProfile } from "@/components/UserDashboard/VoterProfile";
 import useVotingStore from "@/lib/store/useVotingStore";
 import { useParams } from "next/navigation";
 import { getCandidateDetails } from "@/lib/server/appwrite";
-import { AppwriteDocument, Candidate } from "@/lib/types"; // Adjust the import path as needed
+import { AppwriteDocument, Candidate } from "@/lib/types";
 
 interface WinnerCardProps {
   winnerDetails: Candidate;
