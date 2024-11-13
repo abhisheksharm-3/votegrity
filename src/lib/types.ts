@@ -27,13 +27,15 @@ export interface User {
   }
 
   export interface Election {
-    id: number
+    id: string
     title: string
     description: string
-    status: 'Active' | 'Upcoming' | 'Completed'
+    category: string
     startDate: Date
     endDate: Date
-    voters: number
+    candidates: Candidate[]
+    joinByCode: string
+    owner: string
   }
   
   export interface PendingVoter {

@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { getElectionDetails } from '@/lib/server/appwrite';
-import type { AppwriteDocument, Candidate, ElectionDetailsResponse } from '../types';
+import type { AppwriteDocument, Candidate, Election, ElectionDetailsResponse } from '../types';
 
-interface ElectionDataState {
+export interface ElectionDataState {
   candidates: Candidate[];
-  electionData: AppwriteDocument | null;
+  electionData: Election | null;
   isLoading: boolean;
   error: string | null;
 }
@@ -18,6 +18,39 @@ export function useElectionData(electionId: string) {
   });
 
   useEffect(() => {
+    interface ElectionDocument {
+      $id: string;
+      title: string;
+      description: string;
+      category: string;
+      startDate: string;
+      endDate: string;
+      owner: string;
+      joinByCode: string;
+    }
+
+
+
+    const transformCandidate = (doc: AppwriteDocument): Candidate => ({
+      candidateId: doc.$id,
+      name: doc.name,
+      age: doc.age,
+      gender: doc.gender,
+      qualifications: doc.qualifications,
+      pitch: doc.pitch
+    });
+    const transformElection = (doc: ElectionDocument): Election => ({
+      id: doc.$id,
+      title: doc.title || "",
+      description: doc.description,
+      category: doc.category,
+      startDate: new Date(doc.startDate),
+      endDate: new Date(doc.endDate),
+      owner: doc.owner,
+      candidates: [],
+      joinByCode: doc.joinByCode
+    });
+
     const fetchElectionData = async () => {
       if (!electionId) return;
 
@@ -25,21 +58,15 @@ export function useElectionData(electionId: string) {
         const response = await getElectionDetails(electionId) as ElectionDetailsResponse;
         
         if (!response.success) {
-          throw new Error(response.message || 'Failed to fetch candidates');
+          throw new Error(response.message || 'Failed to fetch election details');
         }
 
-        const transformedCandidates: Candidate[] = response.candidates.map(doc => ({
-          candidateId: doc.$id,
-          name: doc.name,
-          age: doc.age,
-          gender: doc.gender,
-          qualifications: doc.qualifications,
-          pitch: doc.pitch
-        }));
+        const transformedElection = transformElection(response.election as unknown as ElectionDocument);
+        const transformedCandidates = response.candidates.map(transformCandidate);
 
         setState({
           candidates: transformedCandidates,
-          electionData: response.election,
+          electionData: transformedElection,
           isLoading: false,
           error: null,
         });
@@ -47,10 +74,11 @@ export function useElectionData(electionId: string) {
         setState(prev => ({
           ...prev,
           isLoading: false,
-          error: err instanceof Error ? err.message : 'Failed to load candidates'
+          error: err instanceof Error ? err.message : 'Failed to load election details'
         }));
       }
     };
+    
 
     fetchElectionData();
   }, [electionId]);

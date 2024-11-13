@@ -773,3 +773,126 @@ export async function getCandidateDetails(candidateId: string, electionId: strin
     };
   }
 }
+
+export async function updateVoterStatus(electionId: string, userId: string, status: 'approved' | 'rejected' | 'voted') {
+  try {
+    const { databases } = await createAdminClient();
+    const registrations = await databases.listDocuments(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.REGISTERED_USER_ELECTIONS!,
+      [
+        Query.equal('userID', userId),
+        Query.equal('electionId', electionId)
+      ]
+    );
+
+    if (registrations.documents.length === 0) {
+      return {
+        success: false,
+        message: "Voter registration not found"
+      };
+    }
+
+    const registration = registrations.documents[0];
+
+    await databases.updateDocument(
+      process.env.APPWRITE_DATABASE_ID!,
+      process.env.REGISTERED_USER_ELECTIONS!,
+      registration.$id,
+      {
+        status: status,
+        approvedAt: new Date().toISOString()
+      }
+    );
+
+    return {
+      success: true,
+      message: `Voter status updated to ${status}`
+    };
+
+  } catch (error) {
+    console.error("Error updating voter status:", error);
+    return {
+      success: false,
+      message: "Failed to update voter status",
+      error: error instanceof Error ? error.message : "Unknown error"
+    };
+  }
+}
+
+export async function fetchPendingVoters(electionId: string) {
+  if (!electionId) {
+    throw new Error('Election ID is required');
+  }
+
+  try {
+    const { databases } = await createAdminClient();
+
+    if (!process.env.APPWRITE_DATABASE_ID || 
+        !process.env.REGISTERED_USER_ELECTIONS || 
+        !process.env.REGISTERED_USER_DETAILS) {
+      throw new Error('Required environment variables are not set');
+    }
+
+    // Fetch all pending registrations in one query
+    const registrations = await databases.listDocuments(
+      process.env.APPWRITE_DATABASE_ID,
+      process.env.REGISTERED_USER_ELECTIONS,
+      [
+        Query.equal('electionId', electionId),
+        Query.equal('status', 'pending')
+      ]
+    );
+
+    if (!registrations.documents.length) {
+      return [];
+    }
+
+    // Extract all userIDs from registrations
+    const userIds = registrations.documents.map(reg => reg.userID);
+
+    // Fetch all user details in a single query
+    const users = await databases.listDocuments(
+      process.env.APPWRITE_DATABASE_ID,
+      process.env.REGISTERED_USER_DETAILS,
+      [
+        Query.equal('userID', userIds),
+      ]
+    );
+
+    // Create a map of user details for quick lookup
+    const userMap = new Map(
+      users.documents.map(user => [user.userID, user])
+    );
+
+    // Map registrations to final format
+    const pendingVoters = registrations.documents
+      .map(registration => {
+        const user = userMap.get(registration.userID);
+        
+        if (!user) {
+          console.warn(`No user found for userID: ${registration.userID}`);
+          return null;
+        }
+
+        return {
+          id: registration.$id,
+          userId: user.userID,
+          name: `${user.firstName} ${user.lastName}`.trim(),
+          email: user.email,
+          registrationDate: new Date(registration.$createdAt).toLocaleString()
+        };
+      })
+      .filter((voter): voter is NonNullable<typeof voter> => voter !== null);
+
+    return pendingVoters;
+
+  } catch (error) {
+    console.error("Error fetching pending voters:", error);
+    throw new Error(
+      error instanceof Error 
+        ? `Failed to fetch pending voters: ${error.message}`
+        : 'Failed to fetch pending voters'
+    );
+  }
+}

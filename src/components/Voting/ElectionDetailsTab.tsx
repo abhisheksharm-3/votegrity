@@ -1,112 +1,94 @@
-import { useState } from 'react'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon } from 'lucide-react'
+import { CalendarIcon, UserIcon } from 'lucide-react'
 import { format } from 'date-fns'
-import { Election } from '@/lib/types'
-import { CalendarDate, today, getLocalTimeZone } from "@internationalized/date";
-import { Calendar } from '@nextui-org/react'
+import type { Election, Candidate } from '@/lib/types'
 
 interface ElectionDetailsTabProps {
-  election: Election
-  onSave: (updatedElection: Election) => void
+  election: Election;
+  candidates: Candidate[];
 }
 
-export default function ElectionDetailsTab({ election, onSave }: ElectionDetailsTabProps) {
-  const [electionData, setElectionData] = useState(election)
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setElectionData(prev => ({ ...prev, [name]: value }))
-  }
-
-  const handleDateChange = (date: Date | undefined, field: 'startDate' | 'endDate') => {
-    if (date) {
-      setElectionData(prev => ({ ...prev, [field]: date }))
-    }
-  }
-
+export default function ElectionDetailsTab({ election, candidates }: ElectionDetailsTabProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Election Details</CardTitle>
-        <CardDescription>Edit the details of your election</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); onSave(electionData); }}>
-          <div>
-            <Label htmlFor="title">Election Title</Label>
-            <Input id="title" name="title" value={electionData.title} onChange={handleInputChange} />
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Election Details</CardTitle>
+          <CardDescription>View the details of this election</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-1">
+            <h3 className="text-sm font-medium">Election Title</h3>
+            <p className="text-base">{election.title}</p>
           </div>
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Textarea id="description" name="description" value={electionData.description} onChange={handleInputChange} />
+
+          <div className="space-y-1">
+            <h3 className="text-sm font-medium">Description</h3>
+            <p className="text-base whitespace-pre-wrap">{election.description}</p>
           </div>
-          <div>
-            <Label htmlFor="status">Status</Label>
-            <Badge variant={electionData.status === "Active" ? "default" : electionData.status === "Upcoming" ? "secondary" : "outline"}>
-              {electionData.status}
-            </Badge>
-          </div>
+
           <div className="grid grid-cols-2 gap-4">
-            <DatePickerField
-              label="Start Date"
-              date={electionData.startDate}
-              onSelect={(date) => handleDateChange(date, 'startDate')}
-            />
-            <DatePickerField
-              label="End Date"
-              date={electionData.endDate}
-              onSelect={(date) => handleDateChange(date, 'endDate')}
-            />
-          </div>
-          <div>
-            <Label>Total Voters</Label>
-            <p>{electionData.voters}</p>
-          </div>
-          <Button type="submit">Save Changes</Button>
-        </form>
-      </CardContent>
-    </Card>
-  )
-}
+            <div className="space-y-1">
+              <h3 className="text-sm font-medium">Start Date</h3>
+              <div className="flex items-center text-base">
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {format(election.startDate, "PPP")}
+              </div>
+            </div>
 
-interface DatePickerFieldProps {
-  label: string
-  date: Date
-  onSelect: (date: Date | undefined) => void
-}
+            <div className="space-y-1">
+              <h3 className="text-sm font-medium">End Date</h3>
+              <div className="flex items-center text-base">
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {format(election.endDate, "PPP")}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-function DatePickerField({ label, date, onSelect }: DatePickerFieldProps) {
-  return (
-    <div>
-      <Label>{label}</Label>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="outline" className="w-full justify-start text-left font-normal">
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {date ? format(date, "PPP") : <span>Pick a date</span>}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0">
-          <Calendar
-            defaultValue={today(getLocalTimeZone())}
-            minValue={today(getLocalTimeZone())}
-            value={date ? new CalendarDate(date.getFullYear(), date.getMonth() + 1, date.getDate()) : undefined}
-            onChange={(date) => {
-              if (date) {
-                onSelect
-              }
-            }}
-            showMonthAndYearPickers
-          />
-        </PopoverContent>
-      </Popover>
+      <Card>
+        <CardHeader>
+          <CardTitle>Candidates</CardTitle>
+          <CardDescription>
+            {candidates.length} registered candidates for this election
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-6 md:grid-cols-2">
+            {candidates.map((candidate) => (
+              <Card key={candidate.candidateId}>
+                <CardHeader>
+                  <CardTitle className="text-lg">
+                    <div className="flex items-center gap-2">
+                      <UserIcon className="h-5 w-5" />
+                      {candidate.name}
+                    </div>
+                  </CardTitle>
+                  <CardDescription>
+                    {candidate.age} years old • {candidate.gender}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div>
+                    <h4 className="font-medium text-sm">Qualifications</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {candidate.qualifications}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-sm">Election Pitch</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {candidate.pitch}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
-  )
+  );
 }
