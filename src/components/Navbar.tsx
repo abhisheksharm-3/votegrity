@@ -8,6 +8,7 @@ import React from "react";
 const NavbarComponent = ({ isLandingPage }: {isLandingPage: boolean}) => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const navItems = [
+    { label: "Home", href: "/" },
     { label: "How to Vote", href: "/how-to-vote" },
     { label: "About Us", href: "/about-us" },
   ];
@@ -17,7 +18,7 @@ const NavbarComponent = ({ isLandingPage }: {isLandingPage: boolean}) => {
     {/* Desktop Navbar */}
     <div className="container py-6 lg:flex items-center justify-between hidden">
       <Link href="/">
-        <Image src="/images/logo.png" alt="Logo" width={200} height={200} />
+        <Image src="/images/logo.png" alt="Logo" width={200} height={200} className=""/>
       </Link>
       <div className="flex justify-center items-center gap-8">
         {navItems.map((item, index) => (
