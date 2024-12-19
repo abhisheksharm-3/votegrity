@@ -70,7 +70,7 @@ const TimelineItem: React.FC<TimelineItemProps> = ({ year, title, description })
       <span className="mb-2 inline-block rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-600">
         {year}
       </span>
-      <h3 className="mb-2 text-lg font-semibold text-gray-900">{title}</h3>
+      <h3 className="mb-2 text-lg font-semibold text-white">{title}</h3>
       <p className="text-gray-600">{description}</p>
     </div>
   </motion.div>
@@ -108,7 +108,7 @@ export default function AboutVotegrity(): JSX.Element {
 
   return (
     <Layout>
-      <div className="relative min-h-screen bg-[#090909]">
+      <div className="relative min-h-screen bg-gray-700">
         {/* Hero Section with Simplified Design */}
         <motion.div 
           style={{ opacity, scale }}
@@ -178,7 +178,7 @@ export default function AboutVotegrity(): JSX.Element {
               <Badge className="mb-4 bg-emerald-100 px-4 py-2 text-emerald-800">
                 Features
               </Badge>
-              <h2 className="text-3xl font-bold text-gray-900">
+              <h2 className="text-3xl font-bold text-white">
                 Built for Security & Scale
               </h2>
             </div>
@@ -243,7 +243,7 @@ export default function AboutVotegrity(): JSX.Element {
               <Badge className="mb-4 bg-emerald-100 px-4 py-2 text-emerald-800">
                 Journey
               </Badge>
-              <h2 className="text-3xl font-bold text-gray-900">Our Progress</h2>
+              <h2 className="text-3xl font-bold text-white">Our Progress</h2>
             </div>
             <div className="mx-auto max-w-2xl">
               <TimelineItem 
@@ -275,7 +275,7 @@ export default function AboutVotegrity(): JSX.Element {
               <Badge className="mb-4 bg-emerald-100 px-4 py-2 text-emerald-800">
                 Team
               </Badge>
-              <h2 className="text-3xl font-bold text-gray-900">Meet Our Team</h2>
+              <h2 className="text-3xl font-bold text-white">Meet Our Team</h2>
             </div>
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               <motion.div
