@@ -31,7 +31,7 @@ const NavbarComponent = ({ isLandingPage }: {isLandingPage: boolean}) => {
           </Link>
         ))}
         <Link href="/login">
-          <Button className="bg-[#94c358] rounded-md text-white font-bold tracking-wide" variant="shadow">
+          <Button className="bg-gradient-to-r from-[#94c358] to-emerald-600 rounded-md text-white font-bold tracking-wide px-6 py-2 hover:bg-[#94c358]" variant="shadow">
             Login
           </Button>
         </Link>
@@ -53,7 +53,7 @@ const NavbarComponent = ({ isLandingPage }: {isLandingPage: boolean}) => {
       <NavbarContent justify="end">
         <NavbarItem>
         <Link href="/login">
-          <Button className="bg-[#94c358] rounded-md text-white font-bold tracking-wide" variant="shadow">
+          <Button className="bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-md text-white font-bold tracking-wide px-6 py-2 hover:from-emerald-500 hover:to-emerald-700" variant="shadow">
             Login
           </Button>
         </Link>

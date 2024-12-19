@@ -90,7 +90,7 @@ const LoginForm: React.FC = () => {
               <FormControl>
                 <div className="relative">
                   <RiUser5Fill className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-                  <Input placeholder="example@example.com" {...field} className="pl-10" />
+                  <Input placeholder="example@example.com" {...field} className="pl-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500" />
                 </div>
               </FormControl>
               <FormMessage />
@@ -106,7 +106,7 @@ const LoginForm: React.FC = () => {
               <FormControl>
                 <div className="relative">
                   <RiGitRepositoryPrivateFill className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-                  <Input type="password" placeholder="********" {...field} className="pl-10" />
+                  <Input type="password" placeholder="********" {...field} className="pl-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500" />
                 </div>
               </FormControl>
               <FormMessage />
@@ -122,7 +122,7 @@ const LoginForm: React.FC = () => {
               <FormControl>
                 <div className="relative">
                   <RiWallet3Fill className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-                  <Input {...field} className="pl-10" readOnly />
+                  <Input {...field} className="pl-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500" readOnly />
                 </div>
               </FormControl>
               <FormMessage />
@@ -134,7 +134,7 @@ const LoginForm: React.FC = () => {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button type="submit" className="w-full bg-green-600 text-white hover:bg-green-700" disabled={isLoading}>
           {isLoading ? 'Logging in...' : 'Login'}
         </Button>
       </form>

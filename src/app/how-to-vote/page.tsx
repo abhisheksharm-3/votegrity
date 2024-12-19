@@ -19,10 +19,11 @@ const HowToVote: React.FC = () => {
 
   return (
     <LayoutWithImage className="min-h-screen overflow-hidden">
-      <div className="p-6 md:p-12 overflow-y-auto scrollbar-hide">
-        <div className="mx-auto max-w-5xl">
+      <div className="relative p-6 md:p-12 overflow-y-auto scrollbar-hide">
+        <div className="absolute inset-0 bg-gradient-to-b from-green-50/30 to-white/50 backdrop-blur-sm -z-10" />
+        <div className="mx-auto max-w-6xl">
           <motion.h1 
-            className="text-green-600 font-bold text-5xl lg:text-6xl font-playfair mb-8 text-center"
+            className="text-white font-bold text-6xl lg:text-7xl font-playfair mb-6 text-center bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
@@ -33,7 +34,7 @@ const HowToVote: React.FC = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="mb-12 text-center text-xl text-green-700 font-light"
+            className="mb-16 text-center text-xl text-white/80 font-light max-w-2xl mx-auto"
           >
             Empowering democratic decisions through blockchain technology
           </motion.p>
@@ -72,17 +73,27 @@ const MainView: React.FC<{ setView: (view: View) => void }> = ({ setView }) => (
 );
 
 const RoleCard: React.FC<StepProps & { onClick: () => void }> = ({ icon, title, description, onClick }) => (
-  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-    <Card className="h-full transition-all duration-300 hover:shadow-xl bg-white/80 backdrop-blur-sm border-green-200">
-      <CardHeader className="flex flex-col items-center text-center">
-        <div className="rounded-full bg-green-100 p-6 mb-4">
-          {icon}
-        </div>
+  <motion.div 
+    whileHover={{ scale: 1.02 }} 
+    whileTap={{ scale: 0.98 }}
+    className="h-full"
+  >
+    <Card className="h-full transition-all duration-300 hover:shadow-2xl bg-gradient-to-br from-white to-green-50 border-none shadow-lg hover:shadow-green-200/50">
+      <CardHeader className="flex flex-col items-center text-center p-8">
+        <motion.div 
+          className="rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 p-6 mb-6 shadow-lg"
+          whileHover={{ rotate: [0, -10, 10, 0], transition: { duration: 0.5 } }}
+        >
+          {React.cloneElement(icon as React.ReactElement, { className: "h-20 w-20 text-white" })}
+        </motion.div>
         <CardTitle className="mt-4 text-3xl font-bold text-green-800">{title}</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col justify-between">
-        <CardDescription className="mb-6 text-center text-lg text-green-700">{description}</CardDescription>
-        <Button className="w-full bg-green-600 text-white hover:bg-green-700 text-lg py-6" onClick={onClick}>
+      <CardContent className="flex flex-col justify-between p-8 pt-0">
+        <CardDescription className="mb-8 text-center text-lg text-green-700">{description}</CardDescription>
+        <Button 
+          className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 text-lg py-6 shadow-lg hover:shadow-xl transition-all duration-300" 
+          onClick={onClick}
+        >
           Get Started
           <ArrowRight className="ml-2 h-5 w-5" />
         </Button>
@@ -143,17 +154,25 @@ const VoteStep: React.FC<StepProps & { index: number }> = ({ icon, title, descri
     initial={{ opacity: 0, y: 50 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay: index * 0.1 }}
+    whileHover={{ scale: 1.01 }}
   >
-    <Card className="transition-all duration-300 hover:shadow-lg bg-white/80 backdrop-blur-sm border-green-200">
-      <CardHeader className="flex flex-row items-center gap-4">
-        <div className="rounded-full bg-green-100 p-3">
-          {React.cloneElement(icon as React.ReactElement, { className: "h-10 w-10 text-green-600" })}
+    <Card className="transition-all duration-300 hover:shadow-xl bg-gradient-to-br from-white to-green-50 border-none shadow-md group">
+      <CardHeader className="flex flex-row items-center gap-6 p-6">
+        <motion.div 
+          className="rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 p-4 shadow-md group-hover:shadow-lg transition-all duration-300"
+          whileHover={{ rotate: 360 }}
+          transition={{ duration: 0.5 }}
+        >
+          {React.cloneElement(icon as React.ReactElement, { className: "h-8 w-8 text-white" })}
+        </motion.div>
+        <div className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-green-800">
+            <span className="text-green-500 mr-2">0{index + 1}.</span>
+            {title}
+          </CardTitle>
+          <CardDescription className="text-base text-green-700">{description}</CardDescription>
         </div>
-        <CardTitle className="text-2xl font-bold text-green-800">{title}</CardTitle>
       </CardHeader>
-      <CardContent>
-        <CardDescription className="text-lg text-green-700">{description}</CardDescription>
-      </CardContent>
     </Card>
   </motion.div>
 );
