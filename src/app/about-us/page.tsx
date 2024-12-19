@@ -33,15 +33,16 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon: Icon, title, descriptio
   <motion.div
     whileHover={{ y: -5 }}
     transition={{ duration: 0.2 }}
+    className="h-full" // Added to ensure parent is full height
   >
-    <Card className="group relative overflow-hidden border-none bg-gradient-to-br from-white to-gray-50 shadow-xl transition-all duration-300 hover:shadow-2xl">
-      <div className="absolute right-0 top-0 h-32 w-32 translate-x-8 translate-y-[-8px] transform opacity-5 transition-transform group-hover:translate-x-4">
-        <Icon className="h-full w-full" />
+    <Card className="group relative h-full overflow-hidden border-none bg-gradient-to-br from-slate-800/80 to-slate-900/90 shadow-xl transition-all duration-300 hover:shadow-emerald-500/20">
+      <div className="absolute right-0 top-0 h-32 w-32 translate-x-8 translate-y-[-8px] transform opacity-10 transition-transform group-hover:translate-x-4">
+        <Icon className="h-full w-full text-emerald-400" />
       </div>
-      <CardContent className="p-6">
-        <Icon className="mb-4 h-8 w-8 text-emerald-600 transition-transform group-hover:scale-110" />
-        <h3 className="mb-2 text-xl font-semibold text-gray-900">{title}</h3>
-        <p className="text-sm leading-relaxed text-gray-600">{description}</p>
+      <CardContent className="flex h-full flex-col p-8">
+        <Icon className="mb-4 h-10 w-10 text-emerald-400 transition-transform group-hover:scale-110" />
+        <h3 className="mb-3 text-2xl font-bold text-white">{title}</h3>
+        <p className="flex-1 text-base leading-relaxed text-gray-300">{description}</p>
       </CardContent>
     </Card>
   </motion.div>
@@ -87,14 +88,14 @@ const MetricCard: React.FC<MetricCardProps> = ({ label, value, icon: Icon }) => 
     whileHover={{ scale: 1.02 }}
     transition={{ duration: 0.2 }}
   >
-    <Card className="border-none bg-gradient-to-br from-emerald-500 to-emerald-600 text-white transition-shadow hover:shadow-2xl">
-      <CardContent className="flex items-center justify-between p-6">
+    <Card className="border-none bg-gradient-to-br from-slate-800 to-slate-900 text-white transition-shadow hover:shadow-2xl hover:shadow-emerald-500/10">
+      <CardContent className="flex items-center justify-between p-8">
         <div>
-          <p className="text-sm font-medium text-emerald-100">{label}</p>
-          <p className="mt-2 text-3xl font-bold tracking-tight">{value}</p>
+          <p className="text-base font-medium text-emerald-400">{label}</p>
+          <p className="mt-2 text-4xl font-bold tracking-tight">{value}</p>
         </div>
-        <div className="rounded-full bg-white/10 p-3">
-          <Icon className="h-8 w-8 text-white" />
+        <div className="rounded-2xl bg-emerald-500/10 p-4">
+          <Icon className="h-10 w-10 text-emerald-400" />
         </div>
       </CardContent>
     </Card>
@@ -108,34 +109,34 @@ export default function AboutVotegrity(): JSX.Element {
 
   return (
     <Layout>
-      <div className="relative min-h-screen bg-gray-700">
-        {/* Hero Section with Simplified Design */}
+      <div className="relative min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900">
+        {/* Hero Section */}
         <motion.div 
           style={{ opacity, scale }}
-          className="relative h-[80vh]"
+          className="relative h-[90vh]"
         >
           <FlickeringGrid
-        className="z-0 absolute inset-0"
-        squareSize={4}
-        gridGap={6}
-        color="#059669"
-        maxOpacity={0.5}
-        flickerChance={0.1}
-      />
-          <div className="container relative mx-auto flex h-full items-center px-4">
-            <div className="max-w-2xl">
+            className="absolute inset-0 z-0"
+            squareSize={5}
+            gridGap={8}
+            color="#10b981"
+            maxOpacity={0.3}
+            flickerChance={0.08}
+          />
+          <div className="container relative mx-auto flex h-full items-center px-6">
+            <div className="max-w-3xl">
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
+                transition={{ duration: 1, ease: "easeOut" }}
               >
-                <Badge className="mb-4 bg-emerald-100 px-4 py-2 text-emerald-800">
+                <Badge className="mb-6 bg-emerald-500/10 px-6 py-2 text-emerald-400 backdrop-blur-sm">
                   Blockchain-Powered Democracy
                 </Badge>
-                <h1 className="mb-6 text-emerald-700 z-50 bg-clip-text text-6xl font-bold  font-playfair">
-                  Revolutionizing Democracy with Blockchain
+                <h1 className="mb-8 font-playfair text-7xl font-bold leading-tight text-white">
+                  Revolutionizing <span className="text-emerald-400">Democracy</span> with Blockchain
                 </h1>
-                <p className="mb-8 text-xl leading-relaxed text-emerald-700">
+                <p className="mb-10 text-xl leading-relaxed text-gray-300">
                   Votegrity combines Ethereum&apos;s security with innovative design to create
                   a transparent and tamper-proof voting system for the future.
                 </p>
@@ -161,10 +162,10 @@ export default function AboutVotegrity(): JSX.Element {
           </div>
         </motion.div>
 
-        <main className="container mx-auto px-4 py-16">
+        <main className="container mx-auto px-6 py-24">
           {/* Key Metrics */}
-          <section className="mb-20">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <section className="mb-32">
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
               <MetricCard label="Total Votes Cast" value="1M+" icon={Blocks} />
               <MetricCard label="Success Rate" value="99.9%" icon={Shield} />
               <MetricCard label="Gas Optimization" value="85%" icon={Zap} />
