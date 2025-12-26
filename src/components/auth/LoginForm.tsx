@@ -1,30 +1,37 @@
 "use client";
+/**
+ * Login form component with wallet integration
+ */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { z } from "zod";
+import { useRouter } from "next/navigation";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { RiGitRepositoryPrivateFill, RiUser5Fill, RiWallet3Fill } from "@remixicon/react";
-import { ethers } from 'ethers';
-import { useRouter } from 'next/navigation';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { RiGitRepositoryPrivateFill, RiUser5Fill, RiWallet3Fill } from "@remixicon/react";
+import { useWallet } from "@/hooks";
+import { API_ROUTES, APP_ROUTES } from "@/lib/constants";
 
-const formSchema = z.object({
+const LOGIN_SCHEMA = z.object({
   email: z.string().min(1, { message: "This field has to be filled." }).email("This is not a valid email."),
   password: z.string().min(8, { message: "Password must be at least 8 characters." }),
   walletAddress: z.string().min(1, { message: "Wallet address is required." }),
 });
 
-const LoginForm: React.FC = () => {
+type LoginFormValuesType = z.infer<typeof LOGIN_SCHEMA>;
+
+export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { address, handleConnect, error: walletError } = useWallet();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<LoginFormValuesType>({
+    resolver: zodResolver(LOGIN_SCHEMA),
     defaultValues: {
       email: "",
       password: "",
@@ -33,54 +40,48 @@ const LoginForm: React.FC = () => {
   });
 
   useEffect(() => {
-    connectWallet();
-  }, []);
+    handleConnect();
+  }, [handleConnect]);
 
-  const connectWallet = async () => {
-    if (typeof window.ethereum !== 'undefined') {
-      try {
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
-        const address = await signer.getAddress();
-        form.setValue('walletAddress', address);
-      } catch (err) {
-        console.error("Failed to connect wallet:", err);
-        setError("Failed to connect wallet. Please try again.");
-      }
-    } else {
-      setError("MetaMask is not installed. Please install it to continue.");
+  useEffect(() => {
+    if (address) {
+      form.setValue("walletAddress", address);
     }
-  };
+  }, [address, form]);
 
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+  useEffect(() => {
+    if (walletError) {
+      setError(walletError);
+    }
+  }, [walletError]);
+
+  async function handleSubmit(data: LoginFormValuesType) {
     setIsLoading(true);
     setError(null);
+
     try {
-      const response = await fetch('/api/user/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch(API_ROUTES.AUTH.LOGIN, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
-        throw new Error('Login failed');
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Login failed");
       }
 
-      router.push('/user/home');
+      router.push(APP_ROUTES.USER.HOME);
     } catch (err) {
-      console.error("Error during login:", err);
       setError(err instanceof Error ? err.message : "An error occurred during login");
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="email"
@@ -135,11 +136,9 @@ const LoginForm: React.FC = () => {
           </Alert>
         )}
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? 'Logging in...' : 'Login'}
+          {isLoading ? "Logging in..." : "Login"}
         </Button>
       </form>
     </Form>
   );
-};
-
-export default LoginForm;
+}

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle } from 'lucide-react';
-import { getLeadingCandidate } from '@/lib/server/appwrite';
+import { getLeadingCandidate } from '@/actions';
 
 // Animation variants to reduce inline objects
 const containerVariants = {
@@ -27,9 +27,9 @@ const checkMarkVariants = {
 // Memoized background image component
 const BackgroundImage = memo(function BackgroundImage() {
   return (
-    <img 
-      src="/images/thanks.svg" 
-      alt="Vote Received" 
+    <img
+      src="/images/thanks.svg"
+      alt="Vote Received"
       className="w-full h-full object-cover"
       loading="eager"
     />
@@ -66,15 +66,19 @@ const FooterMessage = memo(function FooterMessage() {
 
 function VoteConfirmation({ electionId }: { electionId: string }) {
   const [leadCandidate, setLeadCandidate] = useState("Loading...");
-  
+
   useEffect(() => {
     let isMounted = true;
-    
+
     const fetchLeadCandidate = async () => {
       try {
         const response = await getLeadingCandidate(electionId);
         if (isMounted) {
-          setLeadCandidate(response.votingData?.leadingCandidate?.$id || "No candidate found");
+          if (response.success && response.data?.leadingCandidate) {
+            setLeadCandidate(response.data.leadingCandidate.name || "No candidate found");
+          } else {
+            setLeadCandidate("No candidate found");
+          }
         }
       } catch (error) {
         if (isMounted) {
@@ -85,7 +89,7 @@ function VoteConfirmation({ electionId }: { electionId: string }) {
     };
 
     fetchLeadCandidate();
-    
+
     return () => {
       isMounted = false;
     };

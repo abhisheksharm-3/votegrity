@@ -4,14 +4,14 @@ import React from "react";
 import { motion } from "framer-motion";
 import { useParams } from "next/navigation";
 
-import LoggedInLayout from "@/components/LoggedInLayout";
-import WinnerCard from "@/components/Result/WinnerCard";
-import VotingStatistics from "@/components/Voting/VotingStatistics";
-import { VoterProfile } from "@/components/UserDashboard/VoterProfile";
+import LoggedInLayout from "@/components/layout/LoggedInLayout";
+import WinnerCard from "@/components/results/WinnerCard";
+import VotingStatistics from "@/components/voting/VotingStatistics";
+import { VoterProfile } from "@/components/dashboard/VoterProfile";
 
 import useVotingStore from "@/lib/store/useVotingStore";
-import { getCandidateDetails } from "@/lib/server/appwrite";
-import { Candidate } from "@/lib/types";
+import { getCandidateDetails } from "@/actions";
+import type { CandidateType } from "@/types";
 
 // Animation variants
 const animations = {
@@ -28,8 +28,8 @@ const animations = {
 const WinnerPage: React.FC = () => {
   const { id: electionId } = useParams<{ id: string }>();
   const { getWinningCandidate } = useVotingStore();
-  
-  const [winnerDetails, setWinnerDetails] = React.useState<Candidate | undefined>(undefined);
+
+  const [winnerDetails, setWinnerDetails] = React.useState<CandidateType | undefined>(undefined);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -45,25 +45,25 @@ const WinnerPage: React.FC = () => {
 
       try {
         const result = await getWinningCandidate(electionId);
-        
+
         if (!result.winningCandidateId) {
           throw new Error("No winning candidate found");
         }
 
         const details = await getCandidateDetails(result.winningCandidateId, electionId);
 
-        if (!details?.candidate) {
+        if (!details.success || !details.data) {
           throw new Error("Candidate details not found");
         }
 
         if (isMounted) {
           setWinnerDetails({
-            candidateId: details.candidate.$id,
-            name: details.candidate.name,
-            age: details.candidate.age,
-            gender: details.candidate.gender,
-            qualifications: details.candidate.qualifications,
-            pitch: details.candidate.pitch,
+            candidateId: details.data.candidateId,
+            name: details.data.name,
+            age: details.data.age,
+            gender: details.data.gender,
+            qualifications: details.data.qualifications,
+            pitch: details.data.pitch,
           });
         }
       } catch (err) {
@@ -119,13 +119,13 @@ const WinnerPage: React.FC = () => {
           animate="animate"
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <WinnerCard 
+          <WinnerCard
             winnerDetails={winnerDetails}
             electionId={electionId}
             isLoading={isLoading}
           />
         </motion.div>
-        
+
         <motion.div
           className="md:col-span-1 space-y-6"
           variants={animations.fadeInUp}

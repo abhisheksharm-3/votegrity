@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
-import {Snippet} from "@nextui-org/snippet";
+import { Snippet } from "@nextui-org/snippet";
 import {
   Table,
   TableBody,
@@ -22,9 +22,9 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Search, Plus, Edit, Eye, CalendarCheck, Users, Code } from 'lucide-react'
-import LoggedInLayout from '@/components/LoggedInLayout'
-import { fetchOwnedElections } from '@/lib/server/appwrite'
-import {formatDate} from "@/lib/utils"
+import LoggedInLayout from '@/components/layout/LoggedInLayout'
+import { fetchOwnedElections } from '@/actions'
+import { formatDate } from "@/lib/utils"
 
 // Define Election interface
 interface Election {
@@ -48,24 +48,28 @@ export default function MyElections() {
     async function loadElections() {
       try {
         setIsLoading(true)
-        const fetchedElections = await fetchOwnedElections()
-        setElections(fetchedElections.map(doc => ({
-          id: doc.$id,
-          title: doc.title,
-          description: doc.description,
-          category: doc.category,
-          candidates: doc.candidates,
-          startDate: doc.startDate,
-          endDate: doc.endDate,
-          joinByCode: doc.joinByCode
-        })))
+        const response = await fetchOwnedElections()
+        if (response.success && response.data) {
+          setElections(response.data.map((doc: any) => ({
+            id: doc.$id,
+            title: doc.title,
+            description: doc.description,
+            category: doc.category,
+            candidates: doc.candidates,
+            startDate: doc.startDate,
+            endDate: doc.endDate,
+            joinByCode: doc.joinByCode
+          })))
+        } else {
+          setError(new Error(!response.success ? response.error : 'Failed to fetch elections'))
+        }
         setIsLoading(false)
       } catch (err) {
         setError(err instanceof Error ? err : new Error('An unknown error occurred'))
         setIsLoading(false)
       }
     }
-    
+
     loadElections()
   }, [])
 
@@ -81,7 +85,7 @@ export default function MyElections() {
             <Skeleton className="h-12 w-1/2" />
             <Skeleton className="h-10 w-48" />
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="md:col-span-2">
               <CardHeader>
@@ -159,8 +163,8 @@ export default function MyElections() {
               ({filteredElections.length} total)
             </span>
           </h1>
-          <Button 
-            variant="default" 
+          <Button
+            variant="default"
             className="bg-emerald-600 hover:bg-emerald-700 transition-colors duration-300"
             asChild
           >
@@ -169,7 +173,7 @@ export default function MyElections() {
             </Link>
           </Button>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="md:col-span-2">
             <CardHeader>
@@ -219,8 +223,8 @@ export default function MyElections() {
                 <p className="text-gray-500">
                   You haven&apos;t created any elections yet. Get started by creating your first election!
                 </p>
-                <Button 
-                  variant="default" 
+                <Button
+                  variant="default"
                   className="mt-4 bg-primary hover:bg-primary/90"
                   asChild
                 >
@@ -246,8 +250,8 @@ export default function MyElections() {
                 </TableHeader>
                 <TableBody>
                   {filteredElections.map((election) => (
-                    <TableRow 
-                      key={election.id} 
+                    <TableRow
+                      key={election.id}
                       className="hover:bg-gray-50 transition-colors duration-200"
                     >
                       <TableCell className="font-medium">{election.title}</TableCell>
@@ -279,9 +283,9 @@ export default function MyElections() {
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
+                          <Button
+                            variant="outline"
+                            size="sm"
                             className="hover:bg-gray-100"
                             asChild
                           >

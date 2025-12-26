@@ -6,10 +6,10 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import type { Candidate } from '@/lib/types';
+import type { CandidateType } from '@/types';
 
 interface CandidateCardProps {
-  candidate: Candidate;
+  candidate: CandidateType;
 }
 
 export function CandidateCard({ candidate }: CandidateCardProps) {

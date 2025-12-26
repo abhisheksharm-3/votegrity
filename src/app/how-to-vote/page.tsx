@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Wallet, CheckCircle, FileText, Vote, BarChart3, ArrowRight, Users, ClipboardList, PenTool, Lock, ChevronLeft } from "lucide-react"
-import Layout from "@/components/Layout"
+import Layout from "@/components/layout/Layout"
 
 type View = "main" | "voter" | "organizer"
 
@@ -22,7 +22,7 @@ const HowToVote: React.FC = () => {
   return (
     <Layout>
       <div className="relative min-h-screen overflow-hidden">
-        
+
 
         {/* Content */}
         <div className="relative p-6 md:p-12">
@@ -105,7 +105,7 @@ const MainView: React.FC<{ setView: (view: View) => void }> = ({ setView }) => (
 )
 
 const RoleCard: React.FC<StepProps & { onClick: () => void }> = ({ icon, title, description, onClick }) => (
-  <motion.div 
+  <motion.div
     whileHover={{ scale: 1.02 }}
     whileTap={{ scale: 0.98 }}
   >
@@ -118,8 +118,8 @@ const RoleCard: React.FC<StepProps & { onClick: () => void }> = ({ icon, title, 
       </CardHeader>
       <CardContent className="flex flex-col justify-between">
         <CardDescription className="mb-6 text-center text-lg text-gray-600">{description}</CardDescription>
-        <Button 
-          className="w-full bg-emerald-600 text-white hover:bg-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-lg py-6" 
+        <Button
+          className="w-full bg-emerald-600 text-white hover:bg-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-lg py-6"
           onClick={onClick}
         >
           Get Started
@@ -164,9 +164,9 @@ const InstructionsView: React.FC<{ title: string; steps: StepProps[]; onBack: ()
     animate={{ opacity: 1, x: 0 }}
     exit={{ opacity: 0, x: -50 }}
   >
-    <Button 
-      variant="ghost" 
-      className="mb-6 text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 transition-colors duration-200" 
+    <Button
+      variant="ghost"
+      className="mb-6 text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 transition-colors duration-200"
       onClick={onBack}
     >
       <ChevronLeft className="mr-2 h-5 w-5" />
@@ -193,8 +193,8 @@ const VoteStep: React.FC<StepProps & { index: number }> = ({ icon, title, descri
     <Card className="group transition-all duration-300 hover:shadow-lg bg-white/80 backdrop-blur-sm border-emerald-100 hover:border-emerald-200">
       <CardHeader className="flex flex-row items-center gap-4">
         <div className="rounded-full bg-emerald-50 p-3">
-          {React.cloneElement(icon as React.ReactElement, { 
-            className: "h-10 w-10 text-emerald-600 group-hover:scale-110 transition-transform duration-300" 
+          {React.cloneElement(icon as React.ReactElement, {
+            className: "h-10 w-10 text-emerald-600 group-hover:scale-110 transition-transform duration-300"
           })}
         </div>
         <CardTitle className="text-2xl font-light text-gray-900">{title}</CardTitle>

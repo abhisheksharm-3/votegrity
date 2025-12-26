@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { submitVoterRegistration } from "@/lib/server/appwrite";
+import { submitVoterRegistration } from "@/actions";
 import { cookies } from "next/headers";
 
 export async function POST(request: NextRequest) {
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     // Get session cookie
     const cookieStore = cookies();
     const sessionCookie = cookieStore.get("votegrity-session");
-    
+
     if (!sessionCookie) {
       return NextResponse.json(
         { error: "Authentication required" },
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     // Parse the multipart form data
     const formData = await request.formData();
-    
+
     // Validate required fields
     const requiredFields = [
       "firstName",
@@ -58,14 +58,14 @@ export async function POST(request: NextRequest) {
 
     if (!result.success) {
       return NextResponse.json(
-        { error: result.message },
+        { error: result.error },
         { status: 400 }
       );
     }
 
     return NextResponse.json(
       {
-        message: result.message,
+        message: "Voter registration submitted successfully",
         data: result.data,
       },
       { status: 201 }

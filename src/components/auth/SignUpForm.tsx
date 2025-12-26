@@ -1,18 +1,23 @@
 "use client";
-import React, { useEffect, useState } from 'react';
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import z from "zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
-import { Button, Input, Checkbox } from "@nextui-org/react";
-import { RiCalendar2Fill, RiGitRepositoryPrivateFill, RiMailFill, RiUser5Fill, RiEye2Fill, RiEyeCloseFill, RiWallet3Fill } from "@remixicon/react";
-import PasswordStrengthBar from 'react-password-strength-bar';
-import { ethers } from 'ethers';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+/**
+ * Sign up form component with wallet integration
+ */
 
-const formSchema = z.object({
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
+import { Button, Input, Checkbox } from "@nextui-org/react";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import { RiGitRepositoryPrivateFill, RiMailFill, RiUser5Fill, RiEye2Fill, RiEyeCloseFill, RiWallet3Fill } from "@remixicon/react";
+import PasswordStrengthBar from "react-password-strength-bar";
+import { useWallet } from "@/hooks";
+import { API_ROUTES, APP_ROUTES } from "@/lib/constants";
+
+const SIGNUP_SCHEMA = z.object({
   name: z.string().min(1, { message: "Name is required" }),
   email: z.string().min(1, { message: "Email is required" }).email("This is not a valid email."),
   walletAddress: z.string().min(1, { message: "Wallet address is required" }),
@@ -24,15 +29,17 @@ const formSchema = z.object({
   path: ["confirmPassword"],
 });
 
-const SignUpForm = () => {
+type SignUpFormValuesType = z.infer<typeof SIGNUP_SCHEMA>;
+
+export default function SignUpForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [password, setPassword] = useState("");
-  const router = useRouter()
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const router = useRouter();
+  const { address, handleConnect, error: walletError } = useWallet();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<SignUpFormValuesType>({
+    resolver: zodResolver(SIGNUP_SCHEMA),
     defaultValues: {
       name: "",
       email: "",
@@ -43,66 +50,55 @@ const SignUpForm = () => {
     },
   });
 
+  const password = form.watch("password");
+
   useEffect(() => {
-    connectWallet();
-  }, []);
+    handleConnect();
+  }, [handleConnect]);
 
-  const connectWallet = async () => {
-    if (typeof window.ethereum !== 'undefined') {
-      try {
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
-        const address = await signer.getAddress();
-        form.setValue('walletAddress', address);
-      } catch (err) {
-        console.error("Failed to connect wallet:", err);
-        setError("Failed to connect wallet. Please try again.");
-      }
-    } else {
-      setError("MetaMask is not installed. Please install it to continue.");
+  useEffect(() => {
+    if (address) {
+      form.setValue("walletAddress", address);
     }
-  };
+  }, [address, form]);
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
+  useEffect(() => {
+    if (walletError) {
+      setError(walletError);
+    }
+  }, [walletError]);
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newPassword = e.target.value;
-    form.setValue("password", newPassword);
-    setPassword(newPassword);
-  };
+  function handleTogglePasswordVisibility() {
+    setIsPasswordVisible(!isPasswordVisible);
+  }
 
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+  async function handleSubmit(data: SignUpFormValuesType) {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch('/api/user/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch(API_ROUTES.AUTH.REGISTER, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
-        throw new Error('Registration failed');
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Registration failed");
       }
 
-      router.push('/user/home');
+      router.push(APP_ROUTES.USER.HOME);
     } catch (err) {
-      console.error("Error during registration:", err);
       setError(err instanceof Error ? err.message : "An error occurred during registration");
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 lg:space-y-4 flex flex-col w-max">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8 lg:space-y-4 flex flex-col w-max">
         <FormField
           control={form.control}
           name="name"
@@ -152,17 +148,16 @@ const SignUpForm = () => {
                 <div className="relative">
                   <Input
                     placeholder="Password"
-                    type={showPassword ? "text" : "password"}
+                    type={isPasswordVisible ? "text" : "password"}
                     {...field}
-                    onChange={handlePasswordChange}
                     startContent={<RiGitRepositoryPrivateFill />}
                   />
                   <button
                     type="button"
-                    onClick={togglePasswordVisibility}
+                    onClick={handleTogglePasswordVisibility}
                     className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400"
                   >
-                    {showPassword ? <RiEye2Fill /> : <RiEyeCloseFill />}
+                    {isPasswordVisible ? <RiEye2Fill /> : <RiEyeCloseFill />}
                   </button>
                 </div>
               </FormControl>
@@ -196,7 +191,6 @@ const SignUpForm = () => {
             <FormItem>
               <FormControl>
                 <Checkbox
-                  // {...field}
                   isSelected={field.value}
                   onValueChange={field.onChange}
                 >
@@ -208,17 +202,15 @@ const SignUpForm = () => {
           )}
         />
         {error && (
-              <Alert variant="destructive">
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
+          <Alert variant="destructive">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
         <Button type="submit" disabled={isLoading} className="border-2 border-[#94C358] w-max text-white uppercase tracking-widest" variant="bordered">
-          {isLoading ? 'Registering...' : 'Register'}
+          {isLoading ? "Registering..." : "Register"}
         </Button>
       </form>
     </Form>
   );
-};
-
-export default SignUpForm;
+}

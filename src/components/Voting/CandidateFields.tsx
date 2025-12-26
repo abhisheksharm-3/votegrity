@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { FormValues } from '@/lib/schemas/formSchema';
+import { FormValues } from '@/lib/validation/formSchema';
 
 interface CandidateFieldsProps {
     fields: FieldArrayWithId<FormValues, "candidates", "id">[];
@@ -22,14 +22,14 @@ const CandidateFields: React.FC<CandidateFieldsProps> = ({ fields, append, remov
         control,
         name: "candidates",
         defaultValue: fields.map(() => ({ name: '', age: 0, gender: '', qualifications: '', pitch: '' })),
-      });
-    
-      const memoizedCandidateNames = useMemo(() => 
-        candidateNames.map((candidate, index) => 
-          candidate.name || `Unnamed Candidate ${index + 1}`
+    });
+
+    const memoizedCandidateNames = useMemo(() =>
+        candidateNames.map((candidate, index) =>
+            candidate.name || `Unnamed Candidate ${index + 1}`
         ),
         [candidateNames]
-      );
+    );
     return (
         <div>
             <FormLabel>Candidates</FormLabel>
@@ -38,7 +38,7 @@ const CandidateFields: React.FC<CandidateFieldsProps> = ({ fields, append, remov
                 {fields.map((field, index) => (
                     <AccordionItem value={`item-${index}`} key={field.id}>
                         <AccordionTrigger className="text-left">
-                        Candidate {index + 1}: {memoizedCandidateNames[index]}
+                            Candidate {index + 1}: {memoizedCandidateNames[index]}
                         </AccordionTrigger>
                         <AccordionContent>
                             <Card className="p-4 mt-2">

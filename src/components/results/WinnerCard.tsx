@@ -6,11 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Award, ThumbsUp, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Candidate } from "@/lib/types";
+import type { CandidateType } from "@/types";
 import useVotingStore from "@/lib/store/useVotingStore";
 
 interface WinnerCardProps {
-  winnerDetails?: Candidate;
+  winnerDetails?: CandidateType;
   electionId: string;
   isLoading?: boolean;
 }
@@ -18,7 +18,7 @@ interface WinnerCardProps {
 const WinnerCard: React.FC<WinnerCardProps> = ({ winnerDetails, electionId, isLoading = false }) => {
   const [verificationStatus, setVerificationStatus] = useState<'idle' | 'loading' | 'verified' | 'failed'>('idle');
   const [onChainVotes, setOnChainVotes] = useState<number | null>(null);
-  const {getWinningCandidate} = useVotingStore();
+  const { getWinningCandidate } = useVotingStore();
 
   const getInitials = (name: string) => {
     return name
@@ -41,7 +41,7 @@ const WinnerCard: React.FC<WinnerCardProps> = ({ winnerDetails, electionId, isLo
     try {
       setVerificationStatus('loading');
       const result = await getWinningCandidate(electionId);
-      
+
       if (result.winningCandidateId === winnerDetails?.candidateId) {
         setVerificationStatus('verified');
         setOnChainVotes(result.winningVoteCount);
@@ -133,9 +133,9 @@ const WinnerCard: React.FC<WinnerCardProps> = ({ winnerDetails, electionId, isLo
           transition={{ duration: 1, type: "spring", stiffness: 100 }}
           className="absolute inset-0"
         >
-          <img 
-            src="/images/winner.svg" 
-            alt="Winner Background" 
+          <img
+            src="/images/winner.svg"
+            alt="Winner Background"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
@@ -168,17 +168,17 @@ const WinnerCard: React.FC<WinnerCardProps> = ({ winnerDetails, electionId, isLo
               </Badge>
             )}
             <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 border-blue-500/50">
-              <Users className="mr-1" size={16} /> 
+              <Users className="mr-1" size={16} />
               ID: {winnerDetails?.candidateId}
             </Badge>
           </div>
           <p className="text-white/90 mb-4">
             {winnerDetails?.pitch || "Committed to serving the community with dedication and integrity."}
           </p>
-          
+
           <div className="flex flex-col space-y-2">
-            <Button 
-              onClick={verifyWinner} 
+            <Button
+              onClick={verifyWinner}
               disabled={verificationStatus === 'loading'}
               className="bg-white/10 hover:bg-white/20 text-white border border-white/20"
             >

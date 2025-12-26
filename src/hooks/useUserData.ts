@@ -1,109 +1,103 @@
-import { useState, useEffect } from "react";
+"use client";
+/**
+ * Hook for managing user data and election interactions
+ */
+
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  getLoggedInUser, 
-  getWalletAddress, 
-  checkRegisteredVoter, 
-  getUserElections, 
+import {
+  getLoggedInUser,
+  getWalletAddress,
+  checkRegisteredVoter,
+  getUserElections,
   joinElectionByCode,
   castVote,
   getVotingStatistics,
-  createAdminClient
-} from "@/lib/server/appwrite";
-import { User } from "@/lib/types";
-import { Models, Query, Databases } from "node-appwrite";
+  checkVotingStatus,
+} from "@/actions";
+import type { UserType, ElectionType, RegisteredVoterType, VotingStatusType, ElectionStatsType } from "@/types";
+import { APP_ROUTES } from "@/lib/constants";
 
-export interface VotingStatus {
-  hasVoted: boolean;
-  votedAt?: string;
-  voteId?: string;
-}
-
-export interface ElectionStats {
-  totalVotes: number;
-  totalRegistered: number;
-  turnoutPercentage: number;
-}
-
-interface VoteResult {
+type JoinElectionResultType = {
   success: boolean;
   message?: string;
-  voteId?: string;
-}
-
-interface JoinElectionResult {
-  success: boolean;
-  message?: string;
-  election?: Models.Document;
+  electionId?: string;
   error?: string;
-}
+};
 
-interface StatsResult {
+type VoteResultType = {
   success: boolean;
-  totalVotes: number;
-  totalRegistered: number;
-  turnoutPercentage: number;
-}
+  message?: string;
+  voteId?: string;
+};
 
-interface UserDataHookResult {
-  user: User | null;
+type UserDataHookResultType = {
+  user: UserType | null;
   walletAddress: string | null;
-  registeredVoterData: Models.Document | null;
-  elections: Models.Document[];
+  registeredVoterData: RegisteredVoterType | null;
+  elections: ElectionType[];
   isRegisteredVoter: boolean;
   isLoading: boolean;
   error: string | null;
-  votingStatus: Record<string, VotingStatus>;
-  electionStats: Record<string, ElectionStats>;
-  joinElection: (joinCode: string) => Promise<JoinElectionResult>;
-  submitVote: (electionId: string, candidateId: string) => Promise<VoteResult>;
-  refreshElectionData: (electionId: string) => Promise<void>;
-  fetchElectionStats: (electionId: string) => Promise<void>;
-}
+  votingStatus: Record<string, VotingStatusType>;
+  electionStats: Record<string, ElectionStatsType>;
+  handleJoinElection: (joinCode: string) => Promise<JoinElectionResultType>;
+  handleSubmitVote: (electionId: string, candidateId: string) => Promise<VoteResultType>;
+  handleRefreshElectionData: (electionId: string) => Promise<void>;
+  handleFetchElectionStats: (electionId: string) => Promise<void>;
+};
 
-export const useUserData = (): UserDataHookResult => {
-  const [user, setUser] = useState<User | null>(null);
+export function useUserData(): UserDataHookResultType {
+  const [user, setUser] = useState<UserType | null>(null);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [registeredVoterData, setRegisteredVoterData] = useState<Models.Document | null>(null);
-  const [elections, setElections] = useState<Models.Document[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [votingStatus, setVotingStatus] = useState<Record<string, VotingStatus>>({});
-  const [electionStats, setElectionStats] = useState<Record<string, ElectionStats>>({});
+  const [registeredVoterData, setRegisteredVoterData] = useState<RegisteredVoterType | null>(null);
+  const [elections, setElections] = useState<ElectionType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [votingStatus, setVotingStatus] = useState<Record<string, VotingStatusType>>({});
+  const [electionStats, setElectionStats] = useState<Record<string, ElectionStatsType>>({});
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    async function fetchUserData(): Promise<void> {
+    async function fetchUserData() {
       try {
         const loggedInUser = await getLoggedInUser();
         if (!loggedInUser) {
-          router.push("/login");
+          router.push(APP_ROUTES.LOGIN);
           return;
         }
 
         setUser(loggedInUser);
-        
-        const [walletData, voterData, userElections] = await Promise.all([
+
+        const [walletResult, voterResult, electionsResult] = await Promise.all([
           getWalletAddress(loggedInUser.$id),
           checkRegisteredVoter(loggedInUser.$id),
-          getUserElections()
+          getUserElections(),
         ]);
 
-        setWalletAddress(walletData.walletAddress);
-        setRegisteredVoterData(voterData);
-        setElections(userElections);
-
-        // Fetch voting status for each election
-        const votingStatusData: Record<string, VotingStatus> = {};
-        for (const election of userElections) {
-          const status = await checkVotingStatus(election.detail.$id);
-          votingStatusData[election.detail.$id] = status;
+        if (walletResult.success) {
+          setWalletAddress(walletResult.data.walletAddress);
         }
-        setVotingStatus(votingStatusData);
 
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        setError(error instanceof Error ? error.message : "Unknown error occurred");
+        if (voterResult.success && voterResult.data) {
+          setRegisteredVoterData(voterResult.data);
+        }
+
+        if (electionsResult.success) {
+          setElections(electionsResult.data);
+
+          const votingStatusData: Record<string, VotingStatusType> = {};
+          for (const election of electionsResult.data) {
+            const statusResult = await checkVotingStatus(election.id, loggedInUser.$id);
+            if (statusResult.success) {
+              votingStatusData[election.id] = statusResult.data;
+            }
+          }
+          setVotingStatus(votingStatusData);
+        }
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+        setError(err instanceof Error ? err.message : "Unknown error occurred");
       } finally {
         setIsLoading(false);
       }
@@ -111,127 +105,111 @@ export const useUserData = (): UserDataHookResult => {
     fetchUserData();
   }, [router]);
 
-  const checkVotingStatus = async (electionId: string): Promise<VotingStatus> => {
-    if (!user) return { hasVoted: false };
-
+  const handleFetchElectionStats = useCallback(async (electionId: string) => {
     try {
-      const { databases } = await createAdminClient();
-      const votes = await (databases as Databases).listDocuments(
-        process.env.APPWRITE_DATABASE_ID!,
-        process.env.VOTES_COLLECTION_ID!,
-        [
-          Query.equal('userID', user.$id),
-          Query.equal('electionId', electionId),
-          Query.limit(1)
-        ]
-      );
+      const result = await getVotingStatistics(electionId);
+      if (result.success) {
+        setElectionStats((prev) => ({
+          ...prev,
+          [electionId]: result.data,
+        }));
+      }
+    } catch (err) {
+      console.error(`Error fetching election stats for ${electionId}:`, err);
+    }
+  }, []);
 
-      if (votes.documents.length > 0) {
+  const handleSubmitVote = useCallback(
+    async (electionId: string, candidateId: string): Promise<VoteResultType> => {
+      setError(null);
+
+      try {
+        const result = await castVote(electionId, candidateId);
+
+        if (result.success) {
+          setVotingStatus((prev) => ({
+            ...prev,
+            [electionId]: {
+              hasVoted: true,
+              votedAt: new Date().toISOString(),
+              voteId: result.data.voteId,
+            },
+          }));
+
+          await handleFetchElectionStats(electionId);
+
+          return { success: true, voteId: result.data.voteId };
+        } else {
+          setError(result.error);
+          return { success: false, message: result.error };
+        }
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "Failed to cast vote";
+        setError(errorMessage);
+        return { success: false, message: errorMessage };
+      }
+    },
+    [handleFetchElectionStats]
+  );
+
+  const handleJoinElection = useCallback(
+    async (joinCode: string): Promise<JoinElectionResultType> => {
+      try {
+        const result = await joinElectionByCode(joinCode);
+
+        if (result.success) {
+          const electionsResult = await getUserElections();
+          if (electionsResult.success) {
+            setElections(electionsResult.data);
+
+            if (user) {
+              const statusResult = await checkVotingStatus(result.data.electionId, user.$id);
+              if (statusResult.success) {
+                setVotingStatus((prev) => ({
+                  ...prev,
+                  [result.data.electionId]: statusResult.data,
+                }));
+              }
+            }
+
+            await handleFetchElectionStats(result.data.electionId);
+          }
+
+          return { success: true, electionId: result.data.electionId };
+        }
+
+        return { success: false, error: result.error };
+      } catch (err) {
+        console.error("Error joining election:", err);
         return {
-          hasVoted: true,
-          votedAt: votes.documents[0].timestamp,
-          voteId: votes.documents[0].$id
+          success: false,
+          message: "Failed to join election",
+          error: err instanceof Error ? err.message : "Unknown error",
         };
       }
+    },
+    [handleFetchElectionStats, user]
+  );
 
-      return { hasVoted: false };
-    } catch (error) {
-      console.error(`Error checking voting status for election ${electionId}:`, error);
-      return { hasVoted: false };
-    }
-  };
+  const handleRefreshElectionData = useCallback(
+    async (electionId: string) => {
+      if (!user) return;
 
-  const submitVote = async (electionId: string, candidateId: string): Promise<VoteResult> => {
-    setError(null);
-    
-    try {
-      const result = await castVote(electionId, candidateId);
-      
-      if (result.success) {
-        // Update local voting status
-        setVotingStatus(prev => ({
-          ...prev,
-          [electionId]: {
-            hasVoted: true,
-            votedAt: new Date().toISOString(),
-            voteId: result.voteId
-          }
-        }));
+      try {
+        const [statusResult] = await Promise.all([
+          checkVotingStatus(electionId, user.$id),
+          handleFetchElectionStats(electionId),
+        ]);
 
-        // Refresh election stats
-        await fetchElectionStats(electionId);
-        
-        return result;
-      } else {
-        setError(result.message);
-        return result;
+        if (statusResult.success) {
+          setVotingStatus((prev) => ({ ...prev, [electionId]: statusResult.data }));
+        }
+      } catch (err) {
+        console.error(`Error refreshing election data for ${electionId}:`, err);
       }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to cast vote";
-      setError(errorMessage);
-      return { success: false, message: errorMessage };
-    }
-  };
-
-  const fetchElectionStats = async (electionId: string): Promise<void> => {
-    try {
-      const stats = await getVotingStatistics(electionId) as StatsResult;
-      if (stats.success) {
-        setElectionStats(prev => ({
-          ...prev,
-          [electionId]: {
-            totalVotes: stats.totalVotes,
-            totalRegistered: stats.totalRegistered,
-            turnoutPercentage: stats.turnoutPercentage
-          }
-        }));
-      }
-    } catch (error) {
-      console.error(`Error fetching election stats for election ${electionId}:`, error);
-    }
-  };
-
-  const joinElection = async (joinCode: string): Promise<JoinElectionResult> => {
-    try {
-      const result = await joinElectionByCode(joinCode);
-      if (result.success && result.election) {
-        // Refresh elections list after successful join
-        const updatedElections = await getUserElections();
-        setElections(updatedElections);
-        
-        // Initialize voting status for the new election
-        const status = await checkVotingStatus(result.election.$id);
-        setVotingStatus(prev => ({
-          ...prev,
-          [result.election.$id]: status
-        }));
-
-        // Fetch initial stats for the new election
-        await fetchElectionStats(result.election.$id);
-      }
-      return result;
-    } catch (error) {
-      console.error("Error joining election:", error);
-      return {
-        success: false,
-        message: "Failed to join election",
-        error: error instanceof Error ? error.message : "Unknown error"
-      };
-    }
-  };
-
-  const refreshElectionData = async (electionId: string): Promise<void> => {
-    try {
-      await Promise.all([
-        checkVotingStatus(electionId).then(status => 
-          setVotingStatus(prev => ({ ...prev, [electionId]: status }))
-        ),
-        fetchElectionStats(electionId)
-      ]);
-    } catch (error) {
-      console.error(`Error refreshing election data for ${electionId}:`, error);
-    }
-  };
+    },
+    [handleFetchElectionStats, user]
+  );
 
   return {
     user,
@@ -243,9 +221,9 @@ export const useUserData = (): UserDataHookResult => {
     error,
     votingStatus,
     electionStats,
-    joinElection,
-    submitVote,
-    refreshElectionData,
-    fetchElectionStats
+    handleJoinElection,
+    handleSubmitVote,
+    handleRefreshElectionData,
+    handleFetchElectionStats,
   };
-};
+}

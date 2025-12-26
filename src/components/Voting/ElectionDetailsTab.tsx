@@ -2,11 +2,11 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { CalendarIcon, UserIcon } from 'lucide-react'
 import { format } from 'date-fns'
-import type { Election, Candidate } from '@/lib/types'
+import type { ElectionType, CandidateType } from '@/types'
 
 interface ElectionDetailsTabProps {
-  election: Election;
-  candidates: Candidate[];
+  election: ElectionType;
+  candidates: CandidateType[];
 }
 
 export default function ElectionDetailsTab({ election, candidates }: ElectionDetailsTabProps) {
