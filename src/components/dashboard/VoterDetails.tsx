@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fadeInUp } from "@/lib/constants";
 import { useUserData } from "@/hooks/useUserData";
-import { UserData } from "@/lib/types";
+import type { UserDataType } from "@/types";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 
@@ -17,7 +17,7 @@ interface DetailRowProps {
 }
 
 const DetailRow: React.FC<DetailRowProps> = ({ label, value, delay = 0 }) => (
-  <motion.tr 
+  <motion.tr
     className="border-b border-white/10"
     initial={{ opacity: 0, x: -20 }}
     animate={{ opacity: 1, x: 0 }}
@@ -54,13 +54,13 @@ export const VoterDetails: React.FC = () => {
   const { registeredVoterData, isRegisteredVoter, isLoading } = useUserData();
 
   const NotRegistered = () => (
-    <motion.div 
+    <motion.div
       className="text-center py-6"
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <motion.p 
+      <motion.p
         className="text-white mb-6"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -73,8 +73,8 @@ export const VoterDetails: React.FC = () => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3 }}
       >
-        <Button 
-          variant="default" 
+        <Button
+          variant="default"
           asChild
           className="hover:scale-105 transition-transform"
         >
@@ -85,10 +85,10 @@ export const VoterDetails: React.FC = () => {
   );
 
   return (
-    <motion.div 
-      className="md:col-span-2" 
-      variants={fadeInUp} 
-      initial="initial" 
+    <motion.div
+      className="md:col-span-2"
+      variants={fadeInUp}
+      initial="initial"
       animate="animate"
       whileHover={{ scale: 1.01 }}
       transition={{ duration: 0.2 }}
@@ -110,28 +110,28 @@ export const VoterDetails: React.FC = () => {
           ) : isRegisteredVoter && registeredVoterData ? (
             <Table>
               <TableBody>
-                <DetailRow 
-                  label="Location" 
+                <DetailRow
+                  label="Location"
                   value={`${registeredVoterData.city}, ${registeredVoterData.state}`}
                   delay={0.1}
                 />
-                <DetailRow 
-                  label="Phone" 
+                <DetailRow
+                  label="Phone"
                   value={registeredVoterData.phone}
                   delay={0.2}
                 />
-                <DetailRow 
-                  label="Gender" 
+                <DetailRow
+                  label="Gender"
                   value={formatValue(registeredVoterData.gender)}
                   delay={0.3}
                 />
-                <DetailRow 
-                  label="ID" 
+                <DetailRow
+                  label="ID"
                   value={`${registeredVoterData.idNumber} (${formatValue(registeredVoterData.idType, 'id')})`}
                   delay={0.4}
                 />
-                <DetailRow 
-                  label="Citizenship" 
+                <DetailRow
+                  label="Citizenship"
                   value={formatValue(registeredVoterData.citizenship)}
                   delay={0.5}
                 />

@@ -10,16 +10,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
-import LoggedInLayout from '@/components/LoggedInLayout';
-import { formSchema, FormValues } from '@/lib/schemas/formSchema';
-import ElectionDetailsFields from '@/components/Voting/ElectionDetailsFields';
-import CandidateFields from '@/components/Voting/CandidateFields';
+import LoggedInLayout from '@/components/layout/LoggedInLayout';
+import { formSchema, FormValues } from '@/lib/validation/formSchema';
+import ElectionDetailsFields from '@/components/voting/ElectionDetailsFields';
+import CandidateFields from '@/components/voting/CandidateFields';
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 import { ID } from 'node-appwrite';
 import { useUserData } from "@/hooks/useUserData";
 import useVotingStore from '@/lib/store/useVotingStore';
-import { createElectionInDB } from '@/lib/server/appwrite';
+import { createElection as createElectionInDB } from '@/actions';
 
 interface ElectionState {
     isSubmitting: boolean;
@@ -38,7 +38,7 @@ export default function CreateElection() {
 
     const router = useRouter();
     const { user } = useUserData();
-    const { createElection } = useVotingStore();
+    const { createElection: createElectionOnChain } = useVotingStore();
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -62,15 +62,18 @@ export default function CreateElection() {
         const timeout = setTimeout(() => controller.abort(), SUBMISSION_TIMEOUT);
 
         try {
-            const success = await createElectionInDB(electionData, electionData.electionId);
+            const result = await createElectionInDB(electionData.electionId, electionData);
             clearTimeout(timeout);
-            
-            if (!success) {
+
+            if (!result.success) {
+                toast.error("Database Error", {
+                    description: result.error || "Failed to save election"
+                });
                 setState(prev => ({ ...prev, isSubmitting: false }));
                 return null;
             }
-            
-            return success;
+
+            return result.data;
         } catch (error) {
             clearTimeout(timeout);
             toast.error("Network Error", {
@@ -116,7 +119,7 @@ export default function CreateElection() {
 
             // Create election on blockchain
             try {
-                await createElection(
+                await createElectionOnChain(
                     electionId,
                     values.title,
                     startTime,
@@ -141,7 +144,7 @@ export default function CreateElection() {
 
             // Update state and show success message
             setState(prev => ({ ...prev, isSuccess: true, isSubmitting: false }));
-            
+
             // Show success toast
             toast.success("Election Created", {
                 description: "Your election has been created successfully."
@@ -161,7 +164,7 @@ export default function CreateElection() {
             toast.error("Unexpected Error", {
                 description: "An unexpected error occurred. Please try again."
             });
-            
+
             setState(prev => ({
                 ...prev,
                 isSubmitting: false,
@@ -180,7 +183,7 @@ export default function CreateElection() {
                         </CardTitle>
                         <CardDescription>Set up your election details and add candidates</CardDescription>
                     </CardHeader>
-                    
+
                     {state.error && (
                         <Alert variant="destructive" className="mx-6 mb-6">
                             <AlertCircle className="h-4 w-4" />
@@ -216,21 +219,21 @@ export default function CreateElection() {
                                         <ScrollArea className="h-[60vh] pr-4">
                                             <ElectionDetailsFields control={form.control} />
                                             <Separator className="my-8" />
-                                            <CandidateFields 
-                                                fields={fields} 
-                                                append={append} 
-                                                remove={remove} 
-                                                control={form.control} 
+                                            <CandidateFields
+                                                fields={fields}
+                                                append={append}
+                                                remove={remove}
+                                                control={form.control}
                                             />
                                         </ScrollArea>
                                     </form>
                                 </Form>
                             </CardContent>
                             <CardFooter>
-                                <Button 
-                                    type="submit" 
-                                    className="w-full" 
-                                    size="lg" 
+                                <Button
+                                    type="submit"
+                                    className="w-full"
+                                    size="lg"
                                     onClick={form.handleSubmit(onSubmit)}
                                     disabled={state.isSubmitting}
                                 >

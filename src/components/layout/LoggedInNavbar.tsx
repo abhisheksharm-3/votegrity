@@ -1,5 +1,5 @@
 "use client"
-import { getLoggedInUser } from "@/lib/server/appwrite";
+import { getLoggedInUser } from "@/actions";
 import { Button, Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenu, NavbarMenuItem, NavbarMenuToggle, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Avatar } from "@nextui-org/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -53,7 +53,7 @@ const LoggedInNavbar: React.FC<LoggedInNavbarProps> = ({ isLandingPage }) => {
                     <Skeleton className="h-8 w-8 rounded-full" />
                 </div>
             </div>
-            
+
             {/* Mobile Skeleton */}
             <div className="w-full px-4 py-3 flex items-center justify-between lg:hidden">
                 <Skeleton className="h-8 w-8" /> {/* Menu toggle */}

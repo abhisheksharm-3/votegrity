@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { FormValues } from '@/lib/schemas/formSchema';
+import { FormValues } from '@/lib/validation/formSchema';
 import { Calendar } from '@nextui-org/react';
 import { CalendarDate, today, getLocalTimeZone } from "@internationalized/date";
 
@@ -80,7 +80,7 @@ const ElectionDetailsFields: React.FC<ElectionDetailsFieldsProps> = ({ control }
                 )}
             />
 
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                     control={control}
                     name="startDate"

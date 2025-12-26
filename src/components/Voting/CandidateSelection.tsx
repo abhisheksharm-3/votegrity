@@ -4,22 +4,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { CandidateCard } from './CandidateCard';
-import { SubmitVoteButton } from './SubmitVoteButton';
-import type { CandidateSelectionProps } from '@/lib/types';
-import { useElectionData } from "@/lib/Hooks/useElectionData";
+import type { CandidateSelectionPropsType } from '@/types';
+import { useElectionDetails } from '@/hooks';
+import { CandidateCard } from "./CandidateCard";
+import { SubmitVoteButton } from "./SubmitVoteButton";
 
 export default function CandidateSelection({
   selectedCandidate,
-  setSelectedCandidate,
+  onSelectCandidate,
   isVoting,
-  handleVoteSubmit,
+  onVoteSubmit,
   electionId
-}: CandidateSelectionProps) {
+}: CandidateSelectionPropsType) {
   const [isConfirmed, setIsConfirmed] = useState(false);
-  const { candidates, electionData, isLoading, error } = useElectionData(electionId);
+  const { data, isLoading, error } = useElectionDetails(electionId);
+  const candidates = data?.candidates ?? [];
+  const electionData = data?.election;
 
-  const selectedCandidateInfo = candidates.find(c => c.candidateId === selectedCandidate);
+  const selectedCandidateInfo = candidates.find((c: any) => c.candidateId === selectedCandidate);
 
   if (isLoading) {
     return (
@@ -35,7 +37,7 @@ export default function CandidateSelection({
     return (
       <Card className="bg-primary/5 backdrop-blur-xl shadow-2xl rounded-2xl">
         <CardContent className="p-8 text-center text-red-500">
-          {error}
+          {error.message}
         </CardContent>
       </Card>
     );
@@ -53,19 +55,19 @@ export default function CandidateSelection({
         <RadioGroup
           value={selectedCandidate}
           onValueChange={(value) => {
-            setSelectedCandidate(value);
+            onSelectCandidate(value);
             setIsConfirmed(false);
           }}
           className="space-y-4"
         >
           {candidates.map((candidate) => (
-            <CandidateCard 
-              key={candidate.candidateId} 
-              candidate={candidate} 
+            <CandidateCard
+              key={candidate.candidateId}
+              candidate={candidate}
             />
           ))}
         </RadioGroup>
-        
+
         {selectedCandidateInfo && (
           <div className="mt-8 flex items-center space-x-2">
             <Checkbox
@@ -83,10 +85,10 @@ export default function CandidateSelection({
           </div>
         )}
 
-        <SubmitVoteButton 
+        <SubmitVoteButton
           isVoting={isVoting}
           isDisabled={!isConfirmed || !selectedCandidate}
-          onSubmit={handleVoteSubmit}
+          onSubmit={onVoteSubmit}
         />
       </CardContent>
     </Card>

@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Info, Check, AlertTriangle } from "lucide-react"
-import LoggedInLayout from "@/components/LoggedInLayout"
+import LoggedInLayout from "@/components/layout/LoggedInLayout"
 
 const MotionCard = motion(Card)
 
@@ -37,7 +37,7 @@ export default function UserSettings() {
         <LoggedInLayout>
             <div className="p-6">
                 <div className="mx-auto max-w-4xl">
-                    <motion.h1 
+                    <motion.h1
                         className="text-white/70 font-medium text-4xl lg:text-5xl font-playfair mb-8"
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}

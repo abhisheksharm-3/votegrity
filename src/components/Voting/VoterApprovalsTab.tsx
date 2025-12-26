@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Check, X } from 'lucide-react'
-import { useVoterManagement } from '@/lib/Hooks/useVoterManagement'
+import { useVoterManagement } from '@/hooks'
 import { toast } from 'sonner'
 
 interface VoterApprovalsTabProps {
@@ -14,12 +14,12 @@ interface VoterApprovalsTabProps {
 }
 
 export default function VoterApprovalsTab({ electionId }: VoterApprovalsTabProps) {
-  const { 
-    pendingVoters, 
-    isLoading, 
-    error, 
-    lastAction, 
-    updateVoter 
+  const {
+    pendingVoters,
+    isLoading,
+    error,
+    lastAction,
+    handleUpdateVoter
   } = useVoterManagement(electionId);
 
 
@@ -32,19 +32,19 @@ export default function VoterApprovalsTab({ electionId }: VoterApprovalsTabProps
   }, [error, toast]);
 
   useEffect(() => {
-    if (lastAction.type && lastAction.message) {
+    if (lastAction?.type && lastAction?.message) {
       toast.info(lastAction.success ? "Success" : "Error", {
         description: lastAction.message
       });
     }
-  }, [lastAction, toast]);
+  }, [lastAction]);
 
-  const handleApproveVoter = async (userId: string) => {
-    await updateVoter(userId, 'approved');
+  const handleApproveVoter = async (voterId: string) => {
+    await handleUpdateVoter(voterId, 'approved');
   };
 
-  const handleRejectVoter = async (userId: string) => {
-    await updateVoter(userId, 'rejected');
+  const handleRejectVoter = async (voterId: string) => {
+    await handleUpdateVoter(voterId, 'rejected');
   };
 
   return (
@@ -85,22 +85,22 @@ export default function VoterApprovalsTab({ electionId }: VoterApprovalsTabProps
                     <TableCell>{voter.registrationDate}</TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <VoterDetailsDialog 
-                          voter={voter} 
-                          onApprove={handleApproveVoter} 
-                          onReject={handleRejectVoter} 
+                        <VoterDetailsDialog
+                          voter={voter}
+                          onApprove={handleApproveVoter}
+                          onReject={handleRejectVoter}
                         />
-                        <Button 
-                          variant="default" 
-                          size="sm" 
-                          onClick={() => handleApproveVoter(voter.userId)}
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => handleApproveVoter(voter.id)}
                         >
                           <Check className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="destructive" 
-                          size="sm" 
-                          onClick={() => handleRejectVoter(voter.userId)}
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleRejectVoter(voter.id)}
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -116,17 +116,12 @@ export default function VoterApprovalsTab({ electionId }: VoterApprovalsTabProps
     </Card>
   )
 }
-interface PendingVoter {
-  id: string;
-  userId: string;
-  name: string;
-  email: string;
-  registrationDate: string;
-}
+import type { PendingVoterType } from '@/types'
+
 interface VoterDetailsDialogProps {
-  voter: PendingVoter
-  onApprove: (userId: string) => void
-  onReject: (userId: string) => void
+  voter: PendingVoterType
+  onApprove: (voterId: string) => void
+  onReject: (voterId: string) => void
 }
 
 function VoterDetailsDialog({ voter, onApprove, onReject }: VoterDetailsDialogProps) {
@@ -157,8 +152,8 @@ function VoterDetailsDialog({ voter, onApprove, onReject }: VoterDetailsDialogPr
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={() => onApprove(voter.userId)}>Approve</Button>
-          <Button variant="outline" onClick={() => onReject(voter.userId)}>Reject</Button>
+          <Button onClick={() => onApprove(voter.id)}>Approve</Button>
+          <Button variant="outline" onClick={() => onReject(voter.id)}>Reject</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

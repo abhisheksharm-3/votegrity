@@ -1,12 +1,20 @@
-// app/providers.tsx
-'use client'
+"use client";
+/**
+ * Application providers wrapper
+ */
 
-import {NextUIProvider} from '@nextui-org/react'
+import { NextUIProvider } from "@nextui-org/react";
+import { QueryProvider } from "@/providers/QueryProvider";
+import type { ReactNode } from "react";
 
-export function Providers({children}: { children: React.ReactNode }) {
+type ProvidersPropsType = {
+  children: ReactNode;
+};
+
+export function Providers({ children }: ProvidersPropsType) {
   return (
-    <NextUIProvider>
-      {children}
-    </NextUIProvider>
-  )
+    <QueryProvider>
+      <NextUIProvider>{children}</NextUIProvider>
+    </QueryProvider>
+  );
 }

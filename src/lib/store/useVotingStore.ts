@@ -1,82 +1,20 @@
 import { create } from 'zustand';
 import { ethers } from 'ethers';
 import VotingContractJSON from '@/lib/Contracts/VotingPlatform.json';
+import type { BlockchainElectionStateType, VotingStoreType } from '@/types';
 
 const VotingABI = VotingContractJSON.abi;
 
-interface Election {
-  electionId: string;
-  creator: string;
-  title: string;
-  startTime: number;
-  endTime: number;
-  isActive: boolean;
-  totalVotes: number;
-  candidateIds: string[];
-  winningCandidateId: string;
-  resultsTallied: boolean;
-}
+// Re-export for backward compatibility
+type Election = BlockchainElectionStateType;
 
-interface VotingStore {
-  contract: ethers.Contract | null;
-  owner: string | null;
-  activeElections: string[];
-  currentElection: Election | null;
-  isInitializing: boolean;
-
-  // Contract Initialization
-  initContract: (provider: ethers.BrowserProvider) => Promise<void>;
-  ensureContract: () => Promise<ethers.Contract>;
-
-  // User Management
-  registerUser: (userId: string) => Promise<void>;
-
-  // Election Management
-  createElection: (
-    electionId: string,
-    title: string,
-    startTime: number,
-    endTime: number,
-    candidateIds: string[]
-  ) => Promise<void>;
-
-  updateElection: (
-    electionId: string,
-    title: string,
-    startTime: number,
-    endTime: number,
-    candidateIds: string[]
-  ) => Promise<void>;
-  
-  // Voting Functions
-  castVoteOnChain: (electionId: string, candidateId: string) => Promise<void>;
-  
-  // Admin Functions
-  setAdmin: (adminAddress: string, isAdmin: boolean) => Promise<void>;
-  tallyElectionResults: (electionId: string) => Promise<void>;
-  
-  // View Functions
-  getElectionDetails: (electionId: string) => Promise<Election>;
-  getCandidateVotes: (electionId: string, candidateId: string) => Promise<number>;
-  isElectionActive: (electionId: string) => Promise<boolean>;
-  getWinningCandidate: (electionId: string) => Promise<{
-    winningCandidateId: string;
-    winningVoteCount: number;
-  }>;
-  getActiveElectionsCount: () => Promise<number>;
-  hasUserVoted: (electionId: string, voterAddress: string) => Promise<boolean>;
-  
-  // Election State Management
-  fetchElection: (electionId: string) => Promise<void>;
-  fetchActiveElections: () => Promise<void>;
-}
 
 const MAX_INIT_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-const useVotingStore = create<VotingStore>((set, get) => ({
+const useVotingStore = create<VotingStoreType>((set, get) => ({
   contract: null,
   owner: null,
   activeElections: [],
@@ -123,7 +61,7 @@ const useVotingStore = create<VotingStore>((set, get) => ({
     } catch (error) {
       console.error('Failed to auto-initialize contract:', error);
     }
-    
+
     throw new Error("Contract not initialized and auto-initialization failed");
   },
 
@@ -156,23 +94,23 @@ const useVotingStore = create<VotingStore>((set, get) => ({
     }
   },
   updateElection: async (
-    electionId: string, 
-    newTitle: string, 
-    newStartTime: number, 
-    newEndTime: number, 
+    electionId: string,
+    newTitle: string,
+    newStartTime: number,
+    newEndTime: number,
     newCandidateIds: string[]
   ) => {
     try {
       const contract = await get().ensureContract();
       const tx = await contract.updateElection(
-        electionId, 
-        newTitle, 
-        newStartTime, 
-        newEndTime, 
+        electionId,
+        newTitle,
+        newStartTime,
+        newEndTime,
         newCandidateIds
       );
       await tx.wait();
-      
+
       // Refresh the current election details after update
       await get().fetchElection(electionId);
     } catch (error) {
@@ -262,6 +200,14 @@ const useVotingStore = create<VotingStore>((set, get) => ({
   getWinningCandidate: async (electionId) => {
     try {
       const contract = await get().ensureContract();
+      const isActive = await contract.isElectionActive(electionId);
+
+      if (isActive) {
+        // End and tally the election first
+        const tx = await contract.tallyElectionResults(electionId);
+        await tx.wait();
+      }
+
       const [winningCandidateId, winningVoteCount] = await contract.getWinningCandidate(electionId);
       return {
         winningCandidateId,

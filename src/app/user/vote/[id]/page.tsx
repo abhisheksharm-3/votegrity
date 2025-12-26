@@ -4,12 +4,12 @@
 import React from "react";
 import { useRouter, useParams } from "next/navigation";
 import { motion } from "framer-motion";
-import LoggedInLayout from "@/components/LoggedInLayout";
-import VotingStatistics from "@/components/Voting/VotingStatistics";
-import CandidateSelection from "@/components/Voting/CandidateSelection";
-import VoteConfirmation from "@/components/Voting/VoteConfirmation";
-import { VoterProfile } from "@/components/UserDashboard/VoterProfile";
-import { useVoting } from "@/lib/Hooks/useVoting";
+import LoggedInLayout from "@/components/layout/LoggedInLayout";
+import VotingStatistics from "@/components/voting/VotingStatistics";
+import CandidateSelection from "@/components/voting/CandidateSelection";
+import VoteConfirmation from "@/components/voting/VoteConfirmation";
+import { VoterProfile } from "@/components/dashboard/VoterProfile";
+import { useVoting } from "@/hooks";
 
 // Animation variants
 const animations = {
@@ -26,7 +26,7 @@ const animations = {
 // Header Component
 function VotePageHeader() {
   return (
-    <motion.h1 
+    <motion.h1
       className="text-primary-foreground font-medium text-4xl lg:text-5xl font-playfair mb-8"
       variants={animations.fadeInDown}
       initial="initial"
@@ -41,7 +41,7 @@ function VotePageHeader() {
 // Voter Info Panel Component
 function VoterInfoPanel() {
   return (
-    <motion.div 
+    <motion.div
       className="md:col-span-1"
       variants={animations.fadeInUp}
       initial="initial"
@@ -56,36 +56,36 @@ function VoterInfoPanel() {
 
 // Voting Panel Component
 interface VotingPanelProps {
-  voteSubmitted: boolean;
+  isVoteSubmitted: boolean;
   selectedCandidate: string;
-  setSelectedCandidate: (candidate: string) => void;
+  onSelectCandidate: (candidate: string) => void;
   isVoting: boolean;
-  handleVoteSubmit: () => void;
+  onVoteSubmit: () => void;
   electionId: string;
 }
 
 function VotingPanel({
-  voteSubmitted,
+  isVoteSubmitted,
   selectedCandidate,
-  setSelectedCandidate,
+  onSelectCandidate,
   isVoting,
-  handleVoteSubmit,
+  onVoteSubmit,
   electionId,
 }: VotingPanelProps) {
   return (
-    <motion.div 
+    <motion.div
       className="md:col-span-2"
       variants={animations.fadeInUp}
       initial="initial"
       animate="animate"
       transition={{ duration: 0.5, delay: 0.2 }}
     >
-      {!voteSubmitted ? (
+      {!isVoteSubmitted ? (
         <CandidateSelection
           selectedCandidate={selectedCandidate}
-          setSelectedCandidate={setSelectedCandidate}
+          onSelectCandidate={onSelectCandidate}
           isVoting={isVoting}
-          handleVoteSubmit={handleVoteSubmit}
+          onVoteSubmit={onVoteSubmit}
           electionId={electionId}
         />
       ) : (
@@ -100,14 +100,14 @@ export default function VotePage() {
   const router = useRouter();
   const params = useParams();
   const electionId = params.id as string;
-  
+
   const {
     selectedCandidate,
-    setSelectedCandidate,
+    handleSelectCandidate,
     isVoting,
-    voteSubmitted,
+    isVoteSubmitted,
     handleVoteSubmit,
-  } = useVoting({ electionId });
+  } = useVoting(electionId);
 
   return (
     <LoggedInLayout>
@@ -116,13 +116,13 @@ export default function VotePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <VoterInfoPanel />
-          
+
           <VotingPanel
-            voteSubmitted={voteSubmitted}
+            isVoteSubmitted={isVoteSubmitted}
             selectedCandidate={selectedCandidate}
-            setSelectedCandidate={setSelectedCandidate}
+            onSelectCandidate={handleSelectCandidate}
             isVoting={isVoting}
-            handleVoteSubmit={handleVoteSubmit}
+            onVoteSubmit={handleVoteSubmit}
             electionId={electionId}
           />
         </div>

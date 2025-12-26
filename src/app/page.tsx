@@ -1,5 +1,5 @@
-import Footer from "@/components/Footer";
-import Layout from "@/components/Layout";
+import Footer from "@/components/layout/Footer";
+import Layout from "@/components/layout/Layout";
 import { Button, Link } from "@nextui-org/react";
 import { FaEthereum } from "react-icons/fa";
 import Image from "next/image";

@@ -1,5 +1,5 @@
-import LayoutWithImage from "@/components/LayoutWithImage";
-import SignUpForm from "@/components/SignUpForm";
+import LayoutWithImage from "@/components/layout/LayoutWithImage";
+import SignUpForm from "@/components/auth/SignUpForm";
 
 const Register = () => {
   return (

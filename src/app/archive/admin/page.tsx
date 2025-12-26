@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, Variants, motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import LoggedInLayout from "@/components/LoggedInLayout";
-import { getLoggedInUser, getWalletAddress } from "@/lib/server/appwrite";
+import LoggedInLayout from "@/components/layout/LoggedInLayout";
+import { getLoggedInUser, getWalletAddress } from "@/actions";
 import { PieChart, Pie, Cell, ResponsiveContainer, LabelList } from 'recharts';
 import { AlertCircle, Users, Clock, StopCircle, ChevronRight, History, TrendingUp, Activity, Zap } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -51,8 +51,10 @@ export default function HomePage() {
                 router.push("/login");
             } else {
                 setUser(loggedInUser);
-                const data = await getWalletAddress(loggedInUser.$id);
-                setWalletAddress(data.walletAddress);
+                const response = await getWalletAddress(loggedInUser.$id);
+                if (response.success && response.data) {
+                    setWalletAddress(response.data.walletAddress);
+                }
             }
         }
         fetchUserData();

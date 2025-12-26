@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Shield, Lock, Zap, ChevronRight, Github, Twitter, LucideIcon, ArrowRight, Check } from "lucide-react"
-import Layout from "@/components/Layout"
+import Layout from "@/components/layout/Layout"
 import Link from "next/link"
 import FlickeringGrid from "@/components/ui/flickering-grid"
 
@@ -24,8 +24,8 @@ interface TechBadgeProps {
 }
 
 const TechBadge: React.FC<TechBadgeProps> = ({ children }) => (
-  <Badge 
-    variant="secondary" 
+  <Badge
+    variant="secondary"
     className="bg-emerald-50/80 text-emerald-700 hover:bg-emerald-100 transition-colors duration-200 backdrop-blur-sm"
   >
     {children}
@@ -41,9 +41,9 @@ interface FeatureCardProps {
 
 const FeatureCard: React.FC<FeatureCardProps> = ({ icon: Icon, title, description, benefits }) => {
   const [isHovered, setIsHovered] = useState(false)
-  
+
   return (
-    <Card 
+    <Card
       className="group relative h-full border border-emerald-100 bg-white/80 backdrop-blur-sm hover:border-emerald-200 transition-all duration-300 hover:shadow-lg"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -88,18 +88,18 @@ const GrowthChart: React.FC = () => (
       <LineChart data={lineChartData}>
         <defs>
           <linearGradient id="userGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#059669" stopOpacity={0.3}/>
-            <stop offset="95%" stopColor="#059669" stopOpacity={0}/>
+            <stop offset="5%" stopColor="#059669" stopOpacity={0.3} />
+            <stop offset="95%" stopColor="#059669" stopOpacity={0} />
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
-        <XAxis 
-          dataKey="year" 
+        <XAxis
+          dataKey="year"
           stroke="#374151"
           tickLine={false}
           axisLine={false}
         />
-        <YAxis 
+        <YAxis
           stroke="#374151"
           tickLine={false}
           axisLine={false}
@@ -133,7 +133,7 @@ const MinimalVotegrity: React.FC = () => {
   return (
     <Layout>
       <div className="relative min-h-screen overflow-hidden">
-        
+
         {/* Content wrapper */}
         <div className="relative">
           {/* Hero Section */}
@@ -186,7 +186,7 @@ const MinimalVotegrity: React.FC = () => {
                 transition={{ delay: 0.5 }}
                 className="flex items-center justify-center gap-4"
               >
-                <Button 
+                <Button
                   className="bg-emerald-600 text-white hover:bg-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 px-8 py-6 text-lg"
                   asChild
                 >
@@ -195,8 +195,8 @@ const MinimalVotegrity: React.FC = () => {
                     <ArrowRight className="h-5 w-5" />
                   </Link>
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 transition-all duration-200 px-8 py-6 text-lg"
                   asChild
                 >
@@ -281,30 +281,30 @@ const MinimalVotegrity: React.FC = () => {
                 <div>
                   <h2 className="text-2xl font-medium text-gray-900 mb-2">Built by Abhishek Sharma</h2>
                   <div className="flex gap-3 mt-3">
-                    <a 
-                      href="https://github.com/abhisheksharm-3" 
-                      target="_blank" 
+                    <a
+                      href="https://github.com/abhisheksharm-3"
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="inline-block"
                     >
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors duration-200"
                       >
                         <Github className="h-5 w-5 mr-2" />
                         GitHub
                       </Button>
                     </a>
-                    <a 
-                      href="https://twitter.com/abhisheks031" 
-                      target="_blank" 
+                    <a
+                      href="https://twitter.com/abhisheks031"
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="inline-block"
                     >
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors duration-200"
                       >
                         <Twitter className="h-5 w-5 mr-2" />
@@ -328,9 +328,9 @@ const MinimalVotegrity: React.FC = () => {
                 <div>
                   <h3 className="text-lg font-medium text-gray-900 mb-4">About the Project</h3>
                   <p className="text-gray-600 leading-relaxed text-lg">
-                    Votegrity represents the convergence of blockchain security and modern web interfaces. 
-                    Built with a relentless focus on transparency and user privacy, it leverages zero-knowledge 
-                    proofs and smart contracts to ensure tamper-proof, verifiable voting processes while 
+                    Votegrity represents the convergence of blockchain security and modern web interfaces.
+                    Built with a relentless focus on transparency and user privacy, it leverages zero-knowledge
+                    proofs and smart contracts to ensure tamper-proof, verifiable voting processes while
                     maintaining an intuitive user experience.
                   </p>
                 </div>

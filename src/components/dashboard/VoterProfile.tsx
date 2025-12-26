@@ -9,7 +9,7 @@ import { useUserData } from "@/hooks/useUserData";
 import { formatDate } from "@/lib/utils";
 
 const ProfileField = ({ label, value }: { label: string; value: string }) => (
-  <motion.p 
+  <motion.p
     variants={{
       initial: { opacity: 0, x: -10 },
       animate: { opacity: 1, x: 0 }
@@ -37,12 +37,12 @@ const LoadingSkeleton = () => (
 );
 
 export const VoterProfile = () => {
-  const { 
-    user, 
-    walletAddress, 
-    isLoading, 
-    registeredVoterData, 
-    isRegisteredVoter 
+  const {
+    user,
+    walletAddress,
+    isLoading,
+    registeredVoterData,
+    isRegisteredVoter
   } = useUserData();
 
   return (
@@ -59,7 +59,7 @@ export const VoterProfile = () => {
             {isLoading ? (
               <LoadingSkeleton />
             ) : (
-              <motion.div 
+              <motion.div
                 className="flex flex-col items-center space-y-4"
                 initial="initial"
                 animate="animate"
@@ -83,7 +83,7 @@ export const VoterProfile = () => {
                   </Avatar>
                 </motion.div>
 
-                <motion.h2 
+                <motion.h2
                   variants={fadeInUp}
                   className="mt-6 text-2xl font-semibold text-white"
                 >
@@ -91,27 +91,27 @@ export const VoterProfile = () => {
                 </motion.h2>
 
                 {isRegisteredVoter && (
-                  <motion.div 
+                  <motion.div
                     className="space-y-2 text-center"
                     variants={{
                       initial: { opacity: 0 },
                       animate: { opacity: 1 }
                     }}
                   >
-                    <ProfileField 
-                      label="Voter ID" 
-                      value={user?.$id|| "Not set"} 
+                    <ProfileField
+                      label="Voter ID"
+                      value={user?.$id || "Not set"}
                     />
-                    <ProfileField 
-                      label="Wallet" 
-                      value={walletAddress ? 
-                        `${walletAddress.slice(0, 8)}...${walletAddress.slice(-8)}` : 
+                    <ProfileField
+                      label="Wallet"
+                      value={walletAddress ?
+                        `${walletAddress.slice(0, 8)}...${walletAddress.slice(-8)}` :
                         "Not set"
-                      } 
+                      }
                     />
-                    <ProfileField 
-                      label="Date of Birth" 
-                      value={formatDate(registeredVoterData?.dateOfBirth)} 
+                    <ProfileField
+                      label="Date of Birth"
+                      value={registeredVoterData?.dateOfBirth ? formatDate(registeredVoterData.dateOfBirth.toString()) : "Not set"}
                     />
 
                     <motion.div
@@ -119,11 +119,11 @@ export const VoterProfile = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3 }}
                     >
-                      <Badge 
-                        variant="outline" 
+                      <Badge
+                        variant="outline"
                         className="mt-2 bg-yellow-500/20 text-yellow-300 border-yellow-500/50 hover:bg-yellow-500/30"
                       >
-                        Joined: {formatDate(registeredVoterData?.$createdAt)}
+                        Registered Voter
                       </Badge>
                     </motion.div>
                   </motion.div>

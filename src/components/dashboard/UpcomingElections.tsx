@@ -44,12 +44,12 @@ export const UpcomingElections = () => {
             )}
           </motion.div>
         </CardHeader>
-        
+
         <CardContent className="space-y-4">
           {elections.length > 0 ? (
             <motion.div variants={container} className="space-y-3">
               {elections.map((election) => (
-                <motion.div key={election.detail.$id} variants={item}>
+                <motion.div key={election.id} variants={item}>
                   <Button
                     variant="ghost"
                     className="w-full bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white border border-white/10 rounded-lg p-4 space-y-2 transition-all duration-300 h-auto"
@@ -57,25 +57,25 @@ export const UpcomingElections = () => {
                     <div className="flex flex-col w-full text-left space-y-3">
                       <div className="flex justify-between items-start">
                         <span className="text-lg font-semibold">
-                          {election.detail.title}
+                          {election.title}
                         </span>
                         <span className="text-xs px-2 py-1 bg-white/20 rounded-full">
                           Upcoming
                         </span>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-2 text-sm text-white/90">
                         <div className="flex items-center gap-2">
                           <Calendar size={14} />
-                          <span>Date: {election.detail.date}</span>
+                          <span>Start: {new Date(election.startDate).toLocaleDateString()}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <MapPin size={14} />
-                          <span>Location: {election.detail.location}</span>
+                          <span>End: {new Date(election.endDate).toLocaleDateString()}</span>
                         </div>
                         <div className="flex items-center gap-2 col-span-2">
                           <Users size={14} />
-                          <span>Type: {election.detail.type}</span>
+                          <span>Category: {election.category}</span>
                         </div>
                       </div>
                     </div>
@@ -84,7 +84,7 @@ export const UpcomingElections = () => {
               ))}
             </motion.div>
           ) : (
-            <motion.div 
+            <motion.div
               variants={item}
               className="text-center py-8 text-white/80"
             >
@@ -102,7 +102,7 @@ export const UpcomingElections = () => {
               )}
             </motion.div>
           )}
-          
+
           {!isRegisteredVoter && (
             <motion.div variants={item}>
               <Button

@@ -1,6 +1,6 @@
 import { FC } from 'react';
-import LayoutWithImage from "@/components/LayoutWithImage";
-import LoginForm from "@/components/LoginForm";
+import LayoutWithImage from "@/components/layout/LayoutWithImage";
+import LoginForm from "@/components/auth/LoginForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 

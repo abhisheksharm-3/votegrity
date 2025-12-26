@@ -2,18 +2,18 @@
 
 import React, { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import LoggedInLayout from "@/components/LoggedInLayout";
-import { FormValues } from "@/lib/schemas/voterRegisterationSchema";
-import VoterRegistrationForm from "@/components/Voting/VoterRegisterationForm";
+import LoggedInLayout from "@/components/layout/LoggedInLayout";
+import { FormValues } from "@/lib/validation/voter-registration.schema";
+import VoterRegistrationForm from "@/components/voting/VoterRegistrationForm";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUserData } from "@/hooks/useUserData";
 import useVotingStore from "@/lib/store/useVotingStore";
-import { FileValidationOptions, RegistrationState } from "@/lib/types";
+import type { FileValidationOptionsType, RegistrationStateType } from "@/types";
 
-const FILE_VALIDATION_CONFIG: FileValidationOptions = {
+const FILE_VALIDATION_CONFIG: FileValidationOptionsType = {
   maxSize: 10 * 1024 * 1024,
   allowedTypes: ["image/jpeg", "image/png", "application/pdf"]
 };
@@ -21,12 +21,12 @@ const FILE_VALIDATION_CONFIG: FileValidationOptions = {
 const REGISTRATION_TIMEOUT = 100000;
 
 const RegisterVoter: React.FC = () => {
-  const [state, setState] = useState<RegistrationState>({
+  const [state, setState] = useState<RegistrationStateType>({
     isSubmitting: false,
     error: null,
     isSuccess: false
   });
-  
+
   const router = useRouter();
   const { user } = useUserData();
   const { registerUser } = useVotingStore();
@@ -144,7 +144,7 @@ const RegisterVoter: React.FC = () => {
 
       const formData = createFormData(values, idDocument);
       const response = await submitRegistration(formData);
-      
+
       if (!response) {
         setState(prev => ({ ...prev, isSubmitting: false }));
         return;
